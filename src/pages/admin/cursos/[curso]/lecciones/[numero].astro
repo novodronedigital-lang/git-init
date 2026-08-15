@@ -1,0 +1,149 @@
+---
+import Layout from "../../../../../layouts/Layout.astro";
+import Icon from "../../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses.flatMap((course) => {
+    let n = 0;
+    const flatLessons = course.data.modules.flatMap((mod, moduleIndex) =>
+      mod.lessons.map((title) => {
+        n += 1;
+        return { number: n, title, moduleTitle: mod.title, moduleOrder: moduleIndex + 1 };
+      }),
+    );
+
+    return flatLessons.map((lesson) => ({
+      params: { curso: course.id, numero: String(lesson.number) },
+      props: { course, lesson },
+    }));
+  });
+}
+
+const { course, lesson } = Astro.props;
+---
+
+<Layout title={`${lesson.title} · ${course.data.title}`} description="Editar lección.">
+  <section class="bg-sky-50/60 py-12 sm:py-16">
+    <div class="container-page">
+      <a href={`/admin/cursos/${course.id}/lecciones`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+        ← Lecciones de {course.data.title}
+      </a>
+      <span class="mt-4 block text-xs font-semibold uppercase tracking-wide text-navy-400">{lesson.moduleTitle}</span>
+      <h1 class="mt-1 font-display text-2xl font-extrabold leading-tight text-navy-900 sm:text-3xl">{lesson.title}</h1>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20">
+    <div class="container-page max-w-2xl">
+      <form id="lesson-form" class="rounded-3xl border border-navy-100 bg-white p-6 shadow-sm sm:p-8" novalidate>
+        <div class="space-y-5">
+          <div>
+            <label for="title" class="text-sm font-semibold text-navy-800">Título</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              required
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="video_url" class="text-sm font-semibold text-navy-800">URL del vídeo (YouTube o Vimeo)</label>
+            <input
+              id="video_url"
+              name="video_url"
+              type="url"
+              placeholder="https://www.youtube.com/embed/..."
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="body" class="text-sm font-semibold text-navy-800">Texto de la lección</label>
+            <textarea
+              id="body"
+              name="body"
+              rows="8"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            ></textarea>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="mt-6 inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Icon name="check" class="size-4" />
+          <span id="save-label">Guardar lección</span>
+        </button>
+
+        <p id="form-status" class="mt-4 hidden rounded-xl px-4 py-3 text-sm" role="status"></p>
+      </form>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ lessonTitleFallback: lesson.title, lessonModuleOrder: lesson.moduleOrder }}>
+  window.__lessonTitleFallback = lessonTitleFallback;
+  window.__lessonModuleOrder = lessonModuleOrder;
+</script>
+
+<script>
+  import { requireAdmin } from "../../../../../lib/admin";
+  import { supabase } from "../../../../../lib/supabase";
+
+  const admin = await requireAdmin();
+  if (admin) {
+    const pathParts = window.location.pathname.split("/");
+    const courseSlug = pathParts[3];
+    const lessonOrder = Number(pathParts[5]);
+    const moduleOrder = (window as unknown as { __lessonModuleOrder: number }).__lessonModuleOrder;
+
+    const form = document.getElementById("lesson-form") as HTMLFormElement;
+    const titleInput = document.getElementById("title") as HTMLInputElement;
+    const videoInput = document.getElementById("video_url") as HTMLInputElement;
+    const bodyInput = document.getElementById("body") as HTMLTextAreaElement;
+    const statusEl = document.getElementById("form-status");
+    const saveLabel = document.getElementById("save-label");
+    const submitButton = form.querySelector("button[type=submit]") as HTMLButtonElement;
+
+    const { data: existing } = await supabase
+      .from("lessons")
+      .select("title, video_url, body")
+      .eq("course_slug", courseSlug)
+      .eq("lesson_order", lessonOrder)
+      .maybeSingle();
+
+    titleInput.value = existing?.title ?? (window as unknown as { __lessonTitleFallback: string }).__lessonTitleFallback;
+    videoInput.value = existing?.video_url ?? "";
+    bodyInput.value = existing?.body ?? "";
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submitButton.disabled = true;
+      statusEl?.classList.add("hidden");
+
+      const { error } = await supabase.from("lessons").upsert(
+        {
+          course_slug: courseSlug,
+          lesson_order: lessonOrder,
+          module_order: moduleOrder,
+          title: titleInput.value,
+          video_url: videoInput.value || null,
+          body: bodyInput.value || null,
+        },
+        { onConflict: "course_slug,lesson_order" },
+      );
+
+      submitButton.disabled = false;
+      if (statusEl) {
+        statusEl.textContent = error ? "No se ha podido guardar: " + error.message : "Guardado correctamente.";
+        statusEl.className = error
+          ? "mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+          : "mt-4 rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-800";
+      }
+      if (!error && saveLabel) saveLabel.textContent = "Guardado ✓";
+    });
+  }
+</script>

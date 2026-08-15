@@ -1,0 +1,146 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import Icon from "../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses.map((course) => ({
+    params: { curso: course.id },
+    props: { course },
+  }));
+}
+
+const { course } = Astro.props;
+---
+
+<Layout title={`Examen final · ${course.data.title}`} description={course.data.description}>
+  <section class="bg-sky-50/60 py-10 sm:py-12">
+    <div class="container-page">
+      <a href={`/campus/${course.id}`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+        ← {course.data.title}
+      </a>
+      <h1 class="mt-4 font-display text-2xl font-extrabold leading-tight text-navy-900 sm:text-3xl">Examen final</h1>
+    </div>
+  </section>
+
+  <section class="py-12 sm:py-16">
+    <div class="container-page max-w-2xl">
+      <p id="quiz-loading" class="text-sm text-navy-500">Cargando examen...</p>
+
+      <p id="quiz-unavailable" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+        Todavía no hay examen disponible para este curso.
+      </p>
+
+      <form id="quiz-form" class="hidden space-y-6"></form>
+
+      <div id="quiz-result" class="hidden rounded-3xl border border-sky-200 bg-sky-50 p-8 text-center">
+        <p class="font-display text-2xl font-extrabold text-navy-900" id="quiz-score"></p>
+        <p class="mt-2 text-sm text-navy-600">Resultado guardado en tu perfil.</p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { requireSession } from "../../../../lib/auth";
+  import { supabase } from "../../../../lib/supabase";
+
+  interface Question {
+    question: string;
+    options: string[];
+    correctIndex: number;
+  }
+
+  const session = await requireSession();
+  if (session) {
+    const courseSlug = window.location.pathname.split("/")[2];
+
+    const loading = document.getElementById("quiz-loading");
+    const unavailable = document.getElementById("quiz-unavailable");
+    const form = document.getElementById("quiz-form") as HTMLFormElement | null;
+    const resultBox = document.getElementById("quiz-result");
+    const scoreText = document.getElementById("quiz-score");
+
+    const { data: quiz } = await supabase
+      .from("quizzes")
+      .select("id, title, questions")
+      .eq("course_slug", courseSlug)
+      .maybeSingle();
+
+    loading?.classList.add("hidden");
+
+    if (!quiz) {
+      unavailable?.classList.remove("hidden");
+    } else {
+      const questions = quiz.questions as Question[];
+      form?.classList.remove("hidden");
+
+      questions.forEach((q, qIndex) => {
+        const fieldset = document.createElement("fieldset");
+        fieldset.className = "rounded-3xl border border-navy-100 bg-white p-6";
+
+        const legend = document.createElement("legend");
+        legend.className = "font-display text-base font-bold text-navy-900";
+        legend.textContent = `${qIndex + 1}. ${q.question}`;
+        fieldset.appendChild(legend);
+
+        const optionsWrapper = document.createElement("div");
+        optionsWrapper.className = "mt-4 space-y-2";
+
+        q.options.forEach((option, oIndex) => {
+          const label = document.createElement("label");
+          label.className =
+            "flex items-center gap-3 rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-700 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50";
+
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `question-${qIndex}`;
+          input.value = String(oIndex);
+          input.required = true;
+          input.className = "size-4 text-sky-600 focus:ring-sky-500";
+
+          label.appendChild(input);
+          label.append(option);
+          optionsWrapper.appendChild(label);
+        });
+
+        fieldset.appendChild(optionsWrapper);
+        form?.appendChild(fieldset);
+      });
+
+      const submitButton = document.createElement("button");
+      submitButton.type = "submit";
+      submitButton.className =
+        "inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600";
+      submitButton.textContent = "Corregir examen";
+      form?.appendChild(submitButton);
+
+      form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+
+        const answers = questions.map((_, qIndex) => {
+          const selected = form.querySelector<HTMLInputElement>(`input[name="question-${qIndex}"]:checked`);
+          return selected ? Number(selected.value) : -1;
+        });
+
+        const score = answers.reduce((sum, answer, i) => sum + (answer === questions[i].correctIndex ? 1 : 0), 0);
+
+        submitButton.disabled = true;
+
+        await supabase.from("quiz_attempts").insert({
+          user_id: session.user.id,
+          quiz_id: quiz.id,
+          score,
+          total: questions.length,
+          answers,
+        });
+
+        form.classList.add("hidden");
+        if (scoreText) scoreText.textContent = `${score} / ${questions.length} respuestas correctas`;
+        resultBox?.classList.remove("hidden");
+      });
+    }
+  }
+</script>

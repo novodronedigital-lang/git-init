@@ -1,0 +1,165 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+import { SITE } from "../data/site";
+
+const activityTypes = [
+  "Actividad extraescolar",
+  "Jornada o evento",
+  "Curso o taller",
+  "Otra consulta",
+];
+---
+
+<Layout
+  title="Contacto"
+  description="Contacta con DronEduca para organizar una actividad, jornada o curso de drones para niños en tu colegio, ayuntamiento o entidad."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Contacto
+      </span>
+      <h1 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+        ¿Hablamos de tu actividad con drones?
+      </h1>
+      <p class="mx-auto mt-5 max-w-xl text-lg text-navy-600">
+        Cuéntanos tu proyecto y te respondemos en menos de 48 horas laborables.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-10 lg:grid-cols-[1.1fr_1.6fr]">
+      <div class="space-y-4">
+        <div class="rounded-3xl border border-navy-100 bg-white p-6">
+          <span class="grid size-11 place-items-center rounded-xl bg-sky-50 text-sky-600">
+            <Icon name="map-pin" class="size-5" />
+          </span>
+          <h3 class="mt-4 font-display font-bold text-navy-900">Dónde estamos</h3>
+          <p class="mt-1 text-sm text-navy-600">{SITE.location}</p>
+          <p class="mt-1 text-xs text-navy-400">Desplazamientos a toda España, sin mínimo de participantes.</p>
+        </div>
+        <div class="rounded-3xl border border-navy-100 bg-white p-6">
+          <span class="grid size-11 place-items-center rounded-xl bg-sky-50 text-sky-600">
+            <Icon name="mail" class="size-5" />
+          </span>
+          <h3 class="mt-4 font-display font-bold text-navy-900">Email</h3>
+          <a href={`mailto:${SITE.email}`} class="mt-1 block text-sm text-sky-700 hover:underline">{SITE.email}</a>
+        </div>
+        <div class="rounded-3xl border border-navy-100 bg-white p-6">
+          <span class="grid size-11 place-items-center rounded-xl bg-sky-50 text-sky-600">
+            <Icon name="phone" class="size-5" />
+          </span>
+          <h3 class="mt-4 font-display font-bold text-navy-900">Teléfono</h3>
+          <a href={`tel:${SITE.phone.replace(/\s/g, "")}`} class="mt-1 block text-sm text-sky-700 hover:underline">{SITE.phone}</a>
+        </div>
+        <div class="rounded-3xl bg-navy-950 p-6 text-white">
+          <span class="grid size-11 place-items-center rounded-xl bg-white/10 text-sky-300">
+            <Icon name="instagram" class="size-5" />
+          </span>
+          <h3 class="mt-4 font-display font-bold">Síguenos</h3>
+          <a href={SITE.instagram} target="_blank" rel="noopener noreferrer" class="mt-1 block text-sm text-sky-300 hover:underline">
+            @droneduca
+          </a>
+        </div>
+      </div>
+
+      <form id="contact-form" class="rounded-3xl border border-navy-100 bg-white p-6 shadow-sm sm:p-10" novalidate>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="name" class="text-sm font-semibold text-navy-800">Nombre y apellidos</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="entity" class="text-sm font-semibold text-navy-800">Colegio / entidad</label>
+            <input
+              id="entity"
+              name="entity"
+              type="text"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="email" class="text-sm font-semibold text-navy-800">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="phone" class="text-sm font-semibold text-navy-800">Teléfono</label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label for="activity" class="text-sm font-semibold text-navy-800">Tipo de actividad</label>
+            <select
+              id="activity"
+              name="activity"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            >
+              {activityTypes.map((type) => (
+                <option value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label for="message" class="text-sm font-semibold text-navy-800">Cuéntanos tu proyecto</label>
+            <textarea
+              id="message"
+              name="message"
+              rows="5"
+              required
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            ></textarea>
+          </div>
+        </div>
+
+        <label class="mt-5 flex items-start gap-3 text-xs text-navy-500">
+          <input id="consent" name="consent" type="checkbox" required class="mt-0.5 size-4 rounded border-navy-300 text-sky-600 focus:ring-sky-500" />
+          Doy mi consentimiento a DronEduca para tratar mis datos con el fin de responder a esta consulta, según la
+          <a href="/privacidad" class="font-semibold text-sky-700 hover:underline">política de privacidad</a>.
+        </label>
+
+        <button
+          type="submit"
+          class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 sm:w-auto"
+        >
+          Enviar mensaje
+          <Icon name="arrow-right" class="size-4" />
+        </button>
+
+        <p id="form-note" class="mt-4 hidden rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status"></p>
+      </form>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const form = document.getElementById("contact-form") as HTMLFormElement | null;
+  const note = document.getElementById("form-note");
+
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    if (note) {
+      note.textContent =
+        "Este formulario todavía no está conectado a un servicio de envío. Mientras tanto, escríbenos directamente a info@droneduca.es.";
+      note.classList.remove("hidden");
+    }
+  });
+</script>

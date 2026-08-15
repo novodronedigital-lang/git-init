@@ -1,0 +1,146 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+import Button from "../components/Button.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import CtaSection from "../components/CtaSection.astro";
+import { getContent } from "../lib/content";
+
+interface Plan {
+  name: string;
+  price: string;
+  unit: string;
+  description: string;
+  href: string;
+  featured?: boolean;
+  bullets: string[];
+}
+
+interface Faq {
+  q: string;
+  a: string;
+}
+
+const plansContent = await getContent("precios.plans", {
+  items: [
+    {
+      name: "Actividad extraescolar",
+      price: "15-20€",
+      unit: "/ alumno / mes",
+      description: "Sesión semanal durante el curso escolar, en el propio colegio. El precio final depende del número de alumnos apuntados.",
+      href: "/servicios/actividades-extraescolares",
+      featured: false,
+      bullets: ["1 sesión semanal de 1 hora", "Grupos de hasta 12 pilotos", "Material y monitor incluidos", "Informe de progreso trimestral"],
+    },
+    {
+      name: "Jornada o evento",
+      price: "Desde 250€",
+      unit: "/ jornada",
+      description: "Formato puntual de medio día o día completo, dentro o fuera de Zaragoza.",
+      href: "/servicios/jornadas-eventos",
+      featured: true,
+      bullets: ["Medio día o día completo", "Hasta 30 participantes por jornada", "Desplazamiento incluido en Aragón", "Fuera de Aragón, sin mínimo de participantes"],
+    },
+    {
+      name: "Curso o taller intensivo",
+      price: "Desde 90€",
+      unit: "/ piloto",
+      description: "Entre 2 y 4 sesiones intensivas, ideal para campamentos y vacaciones.",
+      href: "/servicios/cursos-talleres",
+      featured: false,
+      bullets: ["De 2 a 4 sesiones intensivas", "Grupos reducidos por nivel", "Material incluido", "Diploma acreditativo de participación"],
+    },
+  ] as Plan[],
+});
+
+const faqsContent = await getContent("precios.faqs", {
+  items: [
+    { q: "¿Los precios incluyen el material?", a: "Sí, en todos los formatos incluimos los drones y el material necesario para volar con seguridad. El centro o entidad solo necesita ceder el espacio." },
+    { q: "¿Qué pasa si queremos la actividad fuera de Aragón?", a: "Nos desplazamos a cualquier localidad de España sin necesidad de un número mínimo de participantes. El coste del desplazamiento se calcula según la distancia y se suma al presupuesto." },
+    { q: "¿Hay descuentos para grupos grandes?", a: "Sí, a partir de ciertos volúmenes de alumnos o participantes aplicamos tarifas reducidas. Cuéntanos tu caso y te preparamos un presupuesto ajustado." },
+    { q: "¿Estos cursos otorgan alguna licencia oficial?", a: "No. Todas nuestras actividades son de carácter extraescolar y recreativo, y no otorgan título ni licencia oficial de piloto de drones." },
+  ] as Faq[],
+});
+---
+
+<Layout
+  title="Precios"
+  description="Tarifas orientativas de las actividades extraescolares, jornadas, eventos y cursos de drones para niños de DronEduca en Zaragoza."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Precios
+      </span>
+      <h1 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+        Tarifas claras, sin sorpresas
+      </h1>
+      <p class="mx-auto mt-5 max-w-xl text-lg text-navy-600">
+        Estos son precios orientativos de referencia. El coste final depende del número de participantes, la
+        duración y la localización, así que siempre te preparamos un presupuesto a medida.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-6 lg:grid-cols-3">
+      {plansContent.items.map((plan: Plan) => (
+        <div
+          class:list={[
+            "flex flex-col rounded-3xl p-8",
+            plan.featured
+              ? "border-2 border-sky-500 bg-white shadow-xl shadow-sky-900/10"
+              : "border border-navy-100 bg-white shadow-sm",
+          ]}
+        >
+          {plan.featured && (
+            <span class="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-sky-600 px-3 py-1 text-xs font-bold text-white">
+              <Icon name="spark" class="size-3.5" />
+              Más solicitado
+            </span>
+          )}
+          <h2 class="font-display text-xl font-bold text-navy-900">{plan.name}</h2>
+          <p class="mt-1 text-sm text-navy-500">{plan.description}</p>
+          <div class="mt-5 flex items-baseline gap-1.5">
+            <span class="font-display text-3xl font-extrabold text-navy-900">{plan.price}</span>
+            <span class="text-sm text-navy-500">{plan.unit}</span>
+          </div>
+          <ul class="mt-6 flex-1 space-y-2.5">
+            {plan.bullets.map((bullet) => (
+              <li class="flex items-start gap-2 text-sm text-navy-700">
+                <Icon name="check" class="mt-0.5 size-4 shrink-0 text-sky-600" />
+                {bullet}
+              </li>
+            ))}
+          </ul>
+          <Button href={plan.href} variant={plan.featured ? "primary" : "ghost"} class="mt-6 w-full">
+            Ver detalles del servicio
+          </Button>
+        </div>
+      ))}
+    </div>
+    <p class="mx-auto mt-8 max-w-2xl text-center text-xs text-navy-400">
+      * Precios orientativos de referencia (IVA no incluido), sujetos a confirmación según número de participantes,
+      duración y localización. Solicita presupuesto sin compromiso.
+    </p>
+  </section>
+
+  <section class="border-t border-navy-100 bg-navy-50 py-20 sm:py-24">
+    <div class="container-page">
+      <SectionHeading eyebrow="Dudas frecuentes" title="Preguntas sobre precios y condiciones" />
+      <div class="mx-auto mt-12 max-w-3xl divide-y divide-navy-200 rounded-3xl bg-white shadow-sm ring-1 ring-navy-100">
+        {faqsContent.items.map((faq: Faq) => (
+          <details class="group p-6">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-display font-bold text-navy-900">
+              {faq.q}
+              <Icon name="chevron-down" class="size-5 shrink-0 text-sky-600 transition-transform group-open:rotate-180" />
+            </summary>
+            <p class="mt-3 text-sm leading-relaxed text-navy-600">{faq.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaSection title="¿Hablamos de tu presupuesto?" description="Cuéntanos tu proyecto y te preparamos una propuesta a medida en menos de 48 horas." />
+</Layout>

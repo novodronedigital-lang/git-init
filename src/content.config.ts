@@ -1,0 +1,43 @@
+import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
+
+const blog = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.date(),
+    category: z.string(),
+    image: z.string().optional(),
+  }),
+});
+
+// Catálogo público de cursos: solo metadatos y temario (títulos de lección).
+// El contenido real de cada lección (vídeo, texto) vive en Supabase y se
+// sirve solo a usuarios autenticados. El orden de `modules[].lessons[]`,
+// aplanado, debe coincidir con `lesson_order` en la tabla `lessons` de
+// Supabase (ver SUPABASE.md).
+const courses = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/courses" }),
+  schema: z.object({
+    title: z.string(),
+    tagline: z.string().optional(),
+    description: z.string(),
+    image: z.string().optional(),
+    level: z.string(),
+    category: z.string(),
+    price: z.string(),
+    brand: z.enum(["droneduca", "novodrone"]).default("droneduca"),
+    includes: z.array(z.string()).optional(),
+    forum: z.boolean().default(false),
+    calendar: z.boolean().default(false),
+    modules: z.array(
+      z.object({
+        title: z.string(),
+        lessons: z.array(z.string()),
+      }),
+    ),
+  }),
+});
+
+export const collections = { blog, courses };

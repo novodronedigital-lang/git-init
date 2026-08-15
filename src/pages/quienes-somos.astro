@@ -1,0 +1,196 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import CtaSection from "../components/CtaSection.astro";
+import { getContent } from "../lib/content";
+
+interface Stat {
+  value: string;
+  label: string;
+}
+
+interface CardWithIcon {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface Milestone {
+  title: string;
+  description: string;
+}
+
+interface TeamMember {
+  name: string;
+  role: string;
+}
+
+const hero = await getContent("quienes-somos.hero", {
+  title: "Un proyecto educativo con los pies en la tierra y la mirada en el cielo",
+  description:
+    "En DronEduca creemos que los drones son mucho más que tecnología: son una herramienta extraordinaria para que niños y jóvenes aprendan, se concentren y se diviertan mientras desarrollan habilidades que les acompañarán toda la vida.",
+  stats: [
+    { value: "8", label: "Años, edad ideal de inicio" },
+    { value: "100%", label: "Sesiones con vuelo real" },
+  ] as Stat[],
+  bannerTitle: "Zaragoza y desplazamientos a toda España",
+  bannerText: "Sin mínimo de participantes fuera de Aragón",
+});
+
+const milestonesContent = await getContent("quienes-somos.milestones", {
+  items: [
+    {
+      title: "El origen",
+      description:
+        "DronEduca nace como el primer proyecto educativo centrado en el mundo de los drones, con el objetivo de acercar este sector con tanto futuro a niños y jóvenes.",
+    },
+    {
+      title: "La metodología",
+      description:
+        "Nuestra metodología es única en el sector: nada de teoría en diapositivas y poco más. Se aprende volando desde la primera sesión, con la teoría siempre aplicada directamente a la práctica de vuelo real.",
+    },
+    {
+      title: "El presente",
+      description:
+        "Hoy trabajamos con colegios, ayuntamientos, casas de juventud y escuelas de tiempo libre en Zaragoza, y nos desplazamos a otras localidades bajo petición.",
+    },
+  ] as Milestone[],
+});
+
+const valuesContent = await getContent("quienes-somos.values", {
+  items: [
+    {
+      icon: "shield",
+      title: "Seguridad",
+      description: "Cada vuelo se realiza en espacios controlados, con protocolos claros y material adaptado a la edad de cada piloto.",
+    },
+    {
+      icon: "spark",
+      title: "Formación de calidad",
+      description: "Contenidos pensados por monitores especializados en drones y educación, con una progresión clara por niveles.",
+    },
+    {
+      icon: "compass",
+      title: "Aprendizaje activo",
+      description: "Se aprende volando: la teoría siempre acompaña a la práctica real con drones desde la primera sesión.",
+    },
+    {
+      icon: "users",
+      title: "Cercanía",
+      description: "Grupos reducidos para que cada joven piloto reciba la atención que necesita y avance a su propio ritmo.",
+    },
+  ] as CardWithIcon[],
+});
+
+const teamContent = await getContent("quienes-somos.team", {
+  title: "Empezamos como alumnos, hoy somos el equipo",
+  description:
+    "En DronEduca no vas a encontrar monitores contratados de fuera: nuestro equipo son chavales de 18 y 19 años que fueron alumnos de la propia academia desde que tenían 10 años. Conocen la metodología porque la han vivido, y eso se nota en cada sesión.",
+  items: [
+    { name: "Jorge y Miguel", role: "Fundadores y CEOs de DronEduca y Novodrone" },
+    { name: "Lucas", role: "19 años · Coordinador de DronEduca" },
+    { name: "Iker", role: "18 años · Director de Operaciones" },
+    { name: "Javi", role: "Monitor especializado en educación infantil" },
+  ] as TeamMember[],
+});
+---
+
+<Layout
+  title="Quiénes somos"
+  description="Conoce el proyecto educativo DronEduca: nuestra misión, metodología, valores y el enfoque de seguridad con el que enseñamos a volar drones a niños y jóvenes."
+>
+  <section class="bg-sky-50/60">
+    <div class="container-page grid gap-10 py-16 sm:py-20 lg:grid-cols-2 lg:items-center">
+      <div>
+        <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+          Quiénes somos
+        </span>
+        <h1 class="mt-4 font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+          {hero.title}
+        </h1>
+        <p class="mt-5 text-lg text-navy-600">
+          {hero.description}
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        {hero.stats.map((stat: Stat) => (
+          <div class="rounded-3xl bg-white p-6 text-center shadow-sm ring-1 ring-navy-100">
+            <p class="font-display text-3xl font-extrabold text-sky-600">{stat.value}</p>
+            <p class="mt-1 text-xs font-semibold text-navy-500">{stat.label}</p>
+          </div>
+        ))}
+        <div class="col-span-2 rounded-3xl bg-navy-950 p-6 text-center text-white shadow-sm">
+          <p class="font-display text-lg font-bold">{hero.bannerTitle}</p>
+          <p class="mt-1 text-xs text-navy-300">{hero.bannerText}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page">
+      <SectionHeading eyebrow="Nuestra historia" title="Cómo hacemos las cosas en DronEduca" align="left" class="mx-0" />
+      <div class="mt-12 grid gap-8 md:grid-cols-3">
+        {milestonesContent.items.map((m: Milestone, i: number) => (
+          <div class="relative rounded-3xl border border-navy-100 bg-white p-7">
+            <span class="font-display text-4xl font-extrabold text-sky-100">0{i + 1}</span>
+            <h3 class="mt-3 font-display text-xl font-bold text-navy-900">{m.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-navy-600">{m.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-navy-950 py-20 text-white sm:py-24">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Nuestros valores"
+        title="Lo que no cambia, vuele el drone que vuele"
+        class="[&_span]:bg-white/10 [&_span]:text-sky-300 [&_h2]:text-white"
+      />
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {valuesContent.items.map((value: CardWithIcon) => (
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <span class="grid size-11 place-items-center rounded-xl bg-sky-500/20 text-sky-300">
+              <Icon name={value.icon as any} class="size-6" />
+            </span>
+            <h3 class="mt-4 font-display text-lg font-bold text-white">{value.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-navy-300">{value.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-10 rounded-3xl bg-sky-50 p-8 sm:p-12 lg:grid-cols-2 lg:items-center">
+      <div>
+        <span class="inline-block rounded-full bg-white px-4 py-1 text-xs font-bold uppercase tracking-wide text-sky-700">
+          Nuestro equipo
+        </span>
+        <h2 class="mt-3 font-display text-3xl font-extrabold text-navy-900">{teamContent.title}</h2>
+        <p class="mt-4 text-navy-600">
+          {teamContent.description}
+        </p>
+      </div>
+      <ul class="space-y-3">
+        {teamContent.items.map((person: TeamMember) => (
+          <li class="flex items-start gap-3 rounded-2xl bg-white p-4 text-sm shadow-sm">
+            <Icon name="user" class="mt-0.5 size-5 shrink-0 text-sky-600" />
+            <span>
+              <span class="block font-bold text-navy-900">{person.name}</span>
+              <span class="text-navy-600">{person.role}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <CtaSection
+    title="¿Quieres conocernos en persona?"
+    description="Cuéntanos tu proyecto y te explicamos cómo trabajamos, sin compromiso."
+  />
+</Layout>

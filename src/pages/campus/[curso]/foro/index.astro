@@ -1,0 +1,109 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import Icon from "../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses
+    .filter((course) => course.data.forum)
+    .map((course) => ({
+      params: { curso: course.id },
+      props: { course },
+    }));
+}
+
+const { course } = Astro.props;
+---
+
+<Layout title={`Foro · ${course.data.title}`} description="Foro de la comunidad del curso.">
+  <section class="bg-sky-50/60 py-12 sm:py-16">
+    <div class="container-page flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <a href={`/campus/${course.id}`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+          ← {course.data.title}
+        </a>
+        <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">Foro</h1>
+      </div>
+      <a
+        href={`/campus/${course.id}/foro/nuevo`}
+        class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 hover:bg-amber-600"
+      >
+        <Icon name="check" class="size-4" />
+        Nuevo post
+      </a>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20">
+    <div class="container-page max-w-3xl">
+      <p id="loading-state" class="text-sm text-navy-500">Cargando el foro...</p>
+      <p id="empty-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+        Todavía no hay posts. ¡Sé el primero en escribir!
+      </p>
+      <div id="posts-list" class="hidden space-y-3"></div>
+    </div>
+  </section>
+
+  <template id="post-row-template">
+    <a class="block rounded-2xl border border-navy-100 bg-white p-5 transition-colors hover:border-sky-300">
+      <h3 class="font-display text-base font-bold text-navy-900" data-field="title"></h3>
+      <p class="mt-1 text-xs text-navy-500" data-field="meta"></p>
+    </a>
+  </template>
+</Layout>
+
+<script>
+  import { requireSession } from "../../../../lib/auth";
+  import { supabase } from "../../../../lib/supabase";
+
+  const session = await requireSession();
+  if (session) {
+    const courseSlug = window.location.pathname.split("/")[2];
+
+    const loadingState = document.getElementById("loading-state");
+    const emptyState = document.getElementById("empty-state");
+    const list = document.getElementById("posts-list");
+    const template = document.getElementById("post-row-template") as HTMLTemplateElement;
+
+    const { data: posts } = await supabase
+      .from("forum_posts")
+      .select("id, title, user_id, created_at")
+      .eq("course_slug", courseSlug)
+      .order("created_at", { ascending: false });
+
+    loadingState?.classList.add("hidden");
+
+    if (!posts || posts.length === 0) {
+      emptyState?.classList.remove("hidden");
+    } else {
+      list?.classList.remove("hidden");
+
+      const userIds = [...new Set(posts.map((p) => p.user_id))];
+      const { data: authors } = await supabase.from("forum_authors").select("id, full_name").in("id", userIds);
+      const nameById = new Map((authors ?? []).map((a) => [a.id, a.full_name || "Alumno"]));
+
+      const postIds = posts.map((p) => p.id);
+      const { data: replies } = postIds.length
+        ? await supabase.from("forum_replies").select("post_id").in("post_id", postIds)
+        : { data: [] };
+      const replyCountByPost = new Map<string, number>();
+      for (const reply of replies ?? []) {
+        replyCountByPost.set(reply.post_id, (replyCountByPost.get(reply.post_id) ?? 0) + 1);
+      }
+
+      const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", year: "numeric" });
+
+      for (const post of posts) {
+        const node = template.content.cloneNode(true) as DocumentFragment;
+        const link = node.querySelector("a") as HTMLAnchorElement;
+        link.href = `/campus/${courseSlug}/foro/post?id=${post.id}`;
+        node.querySelector('[data-field="title"]')!.textContent = post.title;
+        const replyCount = replyCountByPost.get(post.id) ?? 0;
+        node.querySelector('[data-field="meta"]')!.textContent =
+          `${nameById.get(post.user_id) ?? "Alumno"} · ${dateFormatter.format(new Date(post.created_at))} · ${replyCount} respuesta${replyCount === 1 ? "" : "s"}`;
+        list?.appendChild(node);
+      }
+    }
+  }
+</script>

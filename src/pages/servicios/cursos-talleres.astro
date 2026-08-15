@@ -1,0 +1,98 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Icon from "../../components/Icon.astro";
+import Button from "../../components/Button.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import CtaSection from "../../components/CtaSection.astro";
+import { getContent } from "../../lib/content";
+
+interface Workshop {
+  icon: string;
+  title: string;
+  duration: string;
+  description: string;
+}
+
+const content = await getContent("servicios.cursos-talleres", {
+  hero: {
+    title: "Cursos y talleres de drones",
+    description:
+      "Talleres intensivos pensados para grupos que quieren aprender rápido y con seguridad en pocas sesiones: campamentos de verano, semanas blancas o actividades puntuales de vacaciones. Nos adaptamos por completo a las necesidades de cada grupo, ya sea un taller intensivo de una semana, una sesión puntual de un solo día o un pack a medida.",
+    noteTitle: "* Cursos de carácter extraoficial",
+    noteText:
+      "Estos cursos no otorgan un título o licencia oficial de piloto de drones ni capacitan para realizar trabajos profesionales con drones. Su objetivo es formativo y recreativo.",
+  },
+  intro: "Estos son formatos de ejemplo — el número de sesiones y el contenido se ajustan siempre a lo que necesite tu grupo.",
+  courses: [
+    { icon: "compass", title: "Iniciación al pilotaje", duration: "4 sesiones", description: "Primeros vuelos con seguridad, control básico y nociones de normativa para pilotos que empiezan de cero." },
+    { icon: "trophy", title: "Taller de precisión", duration: "3 sesiones", description: "Circuitos, aterrizajes de precisión y pequeños retos por equipos para pilotos con nociones básicas." },
+    { icon: "spark", title: "Introducción al FPV", duration: "2 sesiones", description: "Primer contacto con el vuelo en primera persona y las carreras de drones, para los más atrevidos." },
+  ] as Workshop[],
+});
+---
+
+<Layout
+  title="Cursos y talleres de drones"
+  description="Talleres intensivos y cursos de introducción al pilotaje de drones para grupos, campamentos y vacaciones escolares."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page grid gap-10 lg:grid-cols-2 lg:items-center">
+      <div>
+        <a href="/servicios" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+          <Icon name="arrow-right" class="size-4 rotate-180" />
+          Volver a servicios
+        </a>
+        <h1 class="mt-4 font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+          {content.hero.title}
+        </h1>
+        <p class="mt-5 text-lg text-navy-600">
+          {content.hero.description}
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Button href="/contacto" variant="primary">
+            Consultar disponibilidad
+            <Icon name="arrow-right" class="size-4" />
+          </Button>
+          <Button href="/precios" variant="ghost">Ver precios</Button>
+        </div>
+      </div>
+      <div class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-navy-100">
+        <Icon name="shield" class="size-8 text-sky-600" />
+        <p class="mt-4 font-display text-lg font-bold text-navy-900">
+          {content.hero.noteTitle}
+        </p>
+        <p class="mt-2 text-sm leading-relaxed text-navy-600">
+          {content.hero.noteText}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page">
+      <SectionHeading eyebrow="Nuestros talleres" title="Elige el reto que mejor encaje con tu grupo" />
+      <p class="mx-auto mt-4 max-w-2xl text-center text-sm text-navy-500">
+        {content.intro}
+      </p>
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        {content.courses.map((course: Workshop) => (
+          <div class="flex flex-col rounded-3xl border border-navy-100 bg-white p-7">
+            <span class="grid size-12 place-items-center rounded-2xl bg-sky-50 text-sky-600">
+              <Icon name={course.icon as any} class="size-6" />
+            </span>
+            <div class="mt-4 flex items-center justify-between">
+              <h3 class="font-display text-lg font-bold text-navy-900">{course.title}</h3>
+              <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">{course.duration}</span>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed text-navy-600">{course.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaSection
+    title="¿Organizamos un taller intensivo?"
+    description="Perfecto para campamentos de verano, semanas blancas o actividades puntuales de vacaciones."
+  />
+</Layout>

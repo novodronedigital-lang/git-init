@@ -1,0 +1,149 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Icon from "../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+const courses = await getCollection("courses");
+const courseSummaries = courses.map((course) => ({
+  slug: course.id,
+  title: course.data.title,
+  totalLessons: course.data.modules.reduce((sum, m) => sum + m.lessons.length, 0),
+}));
+---
+
+<Layout title="Mi campus" description="Tu progreso en los cursos online de DronEduca.">
+  <section class="bg-sky-50/60 py-12 sm:py-16">
+    <div class="container-page flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <div>
+        <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+          Campus DronEduca
+        </span>
+        <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">Mi campus</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <a
+          id="admin-link"
+          href="/admin"
+          class="hidden items-center gap-2 rounded-full bg-navy-950 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-navy-800"
+        >
+          <Icon name="lock" class="size-4" />
+          Admin
+        </a>
+        <button
+          id="logout-button"
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full border border-navy-200 bg-white px-5 py-2.5 text-sm font-bold text-navy-700 transition-colors hover:border-sky-400 hover:text-sky-700"
+        >
+          <Icon name="log-out" class="size-4" />
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20">
+    <div class="container-page">
+      <p id="loading-state" class="text-sm text-navy-500">Cargando tus cursos...</p>
+
+      <p id="empty-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+        Todavía no tienes acceso a ningún curso.
+        <a href="/cursos" class="font-semibold text-sky-700 hover:underline">Ver catálogo de cursos</a>
+      </p>
+
+      <div id="courses-grid" class="hidden grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </div>
+  </section>
+
+  <template id="course-card-template">
+    <a
+      class="group flex flex-col rounded-3xl border border-navy-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/10"
+    >
+      <h3 class="font-display text-lg font-bold text-navy-900" data-field="title"></h3>
+      <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-navy-100">
+        <div class="h-full rounded-full bg-sky-600" data-field="bar"></div>
+      </div>
+      <div class="mt-2 flex items-center justify-between text-xs text-navy-500">
+        <span data-field="count"></span>
+        <span class="font-bold text-sky-700" data-field="percent"></span>
+      </div>
+    </a>
+  </template>
+
+  <script type="application/json" id="course-summaries-data" set:html={JSON.stringify(courseSummaries)} />
+</Layout>
+
+<script>
+  import { requireSession, signOut } from "../../lib/auth";
+  import { isAdmin } from "../../lib/admin";
+  import { supabase } from "../../lib/supabase";
+
+  interface CourseSummary {
+    slug: string;
+    title: string;
+    totalLessons: number;
+  }
+
+  const courseSummaries: CourseSummary[] = JSON.parse(
+    document.getElementById("course-summaries-data")!.textContent!,
+  );
+
+  document.getElementById("logout-button")?.addEventListener("click", async () => {
+    await signOut();
+    window.location.href = "/";
+  });
+
+  const session = await requireSession();
+
+  if (session) {
+    const loadingState = document.getElementById("loading-state");
+    const emptyState = document.getElementById("empty-state");
+    const grid = document.getElementById("courses-grid");
+    const template = document.getElementById("course-card-template") as HTMLTemplateElement;
+
+    const [{ data: progressRows }, { data: enrollmentRows }, admin] = await Promise.all([
+      supabase.from("lesson_progress").select("lesson_id, lessons(course_slug)").eq("user_id", session.user.id),
+      supabase.from("enrollments").select("course_slug").eq("user_id", session.user.id),
+      isAdmin(session.user.id),
+    ]);
+
+    if (admin) {
+      document.getElementById("admin-link")?.classList.remove("hidden");
+      document.getElementById("admin-link")?.classList.add("inline-flex");
+    }
+
+    const completedByCourse = new Map<string, number>();
+    for (const row of progressRows ?? []) {
+      const slug = (row as { lessons?: { course_slug?: string } }).lessons?.course_slug;
+      if (!slug) continue;
+      completedByCourse.set(slug, (completedByCourse.get(slug) ?? 0) + 1);
+    }
+
+    const enrolledSlugs = new Set((enrollmentRows ?? []).map((e) => e.course_slug));
+
+    loadingState?.classList.add("hidden");
+
+    const accessible = courseSummaries.filter(
+      (c) => c.slug === "drone-starter" || enrolledSlugs.has(c.slug) || admin,
+    );
+
+    if (accessible.length === 0) {
+      emptyState?.classList.remove("hidden");
+    } else {
+      grid?.classList.remove("hidden");
+
+      for (const course of accessible) {
+        const completed = completedByCourse.get(course.slug) ?? 0;
+        const percent = course.totalLessons > 0 ? Math.round((completed / course.totalLessons) * 100) : 0;
+
+        const node = template.content.cloneNode(true) as DocumentFragment;
+        const link = node.querySelector("a") as HTMLAnchorElement;
+        link.href = `/campus/${course.slug}`;
+        node.querySelector('[data-field="title"]')!.textContent = course.title;
+        (node.querySelector('[data-field="bar"]') as HTMLElement).style.width = `${percent}%`;
+        node.querySelector('[data-field="count"]')!.textContent = `${completed} / ${course.totalLessons} lecciones`;
+        node.querySelector('[data-field="percent"]')!.textContent = `${percent}%`;
+        grid?.appendChild(node);
+      }
+    }
+  }
+</script>

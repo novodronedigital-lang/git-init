@@ -1,0 +1,102 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Icon from "../../components/Icon.astro";
+import Button from "../../components/Button.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import CtaSection from "../../components/CtaSection.astro";
+import { getContent } from "../../lib/content";
+
+interface CardWithIcon {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const content = await getContent("servicios.jornadas-eventos", {
+  hero: {
+    title: "Jornadas y eventos con drones",
+    description:
+      "Realizamos todo tipo de jornadas de formación y eventos con drones para jóvenes en colegios, casas de juventud, escuelas de tiempo libre y polideportivos, donde ellos son los verdaderos protagonistas.",
+    bannerTitle: "¡Estamos en Zaragoza!",
+    bannerText:
+      "También organizamos actividades y talleres fuera de Aragón, sin necesidad de un número mínimo de participantes. El precio será algo más elevado para cubrir el desplazamiento.",
+  },
+  formats: [
+    { icon: "calendar", title: "Jornada de medio día", description: "Introducción teórica y prácticas de vuelo guiadas, ideal para grupos de un único colegio o entidad." },
+    { icon: "trophy", title: "Jornada de día completo", description: "Formato ampliado con circuitos, retos por equipos y una pequeña exhibición final de vuelo." },
+    { icon: "users", title: "Evento multitudinario", description: "Para ferias, semanas culturales o fiestas patronales: varios puestos de vuelo simultáneos." },
+  ] as CardWithIcon[],
+  audiences: ["Colegios", "Ayuntamientos", "Casas de juventud", "Escuelas de tiempo libre", "Polideportivos"] as string[],
+});
+---
+
+<Layout
+  title="Jornadas y eventos con drones"
+  description="Jornadas de formación y eventos con drones para colegios, ayuntamientos, casas de juventud y polideportivos, con desplazamiento a toda España."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page grid gap-10 lg:grid-cols-2 lg:items-center">
+      <div>
+        <a href="/servicios" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+          <Icon name="arrow-right" class="size-4 rotate-180" />
+          Volver a servicios
+        </a>
+        <h1 class="mt-4 font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+          {content.hero.title}
+        </h1>
+        <p class="mt-5 text-lg text-navy-600">
+          {content.hero.description}
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Button href="/contacto" variant="primary">
+            Organizar una jornada
+            <Icon name="arrow-right" class="size-4" />
+          </Button>
+          <Button href="/precios" variant="ghost">Ver precios</Button>
+        </div>
+      </div>
+      <div class="rounded-3xl bg-navy-950 p-8 text-white">
+        <Icon name="map-pin" class="size-8 text-sky-300" />
+        <p class="mt-4 font-display text-xl font-bold">{content.hero.bannerTitle}</p>
+        <p class="mt-2 text-sm text-navy-300">
+          {content.hero.bannerText}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page">
+      <SectionHeading eyebrow="Formatos disponibles" title="Adaptamos la jornada a tu evento" />
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        {content.formats.map((format: CardWithIcon) => (
+          <div class="rounded-3xl border border-navy-100 bg-white p-7">
+            <span class="grid size-12 place-items-center rounded-2xl bg-sky-50 text-sky-600">
+              <Icon name={format.icon as any} class="size-6" />
+            </span>
+            <h3 class="mt-4 font-display text-lg font-bold text-navy-900">{format.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-navy-600">{format.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-navy-100 bg-navy-50 py-16">
+    <div class="container-page text-center">
+      <h2 class="font-display text-2xl font-bold text-navy-900">Trabajamos con</h2>
+      <div class="mt-6 flex flex-wrap justify-center gap-3">
+        {content.audiences.map((a: string) => (
+          <span class="rounded-full bg-white px-5 py-2 text-sm font-semibold text-navy-700 shadow-sm ring-1 ring-navy-100">
+            {a}
+          </span>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaSection
+    title="¿Organizamos una jornada con drones?"
+    description="Cuéntanos la fecha, el lugar y el número de participantes aproximado y te preparamos una propuesta."
+  />
+</Layout>

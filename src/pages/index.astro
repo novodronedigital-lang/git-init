@@ -1,0 +1,267 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+import Button from "../components/Button.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import CtaSection from "../components/CtaSection.astro";
+import { getContent } from "../lib/content";
+
+interface Stat {
+  value: string;
+  label: string;
+}
+
+interface CardWithIcon {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const hero = await getContent("home.hero", {
+  badge: "Zaragoza y toda España",
+  title: "Actividades con drones para niños",
+  description:
+    "El primer proyecto educativo centrado en el mundo de los drones. Nuestros jóvenes pilotos aprenden de un sector con un futuro brillante a través de extraescolares, jornadas, eventos y cursos.",
+  stats: [
+    { value: "8 años", label: "Edad ideal para empezar" },
+    { value: "13 años", label: "Edad de nuestro mejor piloto campeón" },
+    { value: "100%", label: "Sesiones con vuelo real" },
+  ] as Stat[],
+});
+
+const servicesContent = await getContent("home.services", {
+  items: [
+    {
+      icon: "users",
+      title: "Actividades extraescolares",
+      description:
+        "Clases extraescolares de drones en colegios donde los jóvenes pilotos aprenden a volar con seguridad, formación de calidad y muchas horas de diversión.",
+      href: "/servicios/actividades-extraescolares",
+    },
+    {
+      icon: "calendar",
+      title: "Jornadas y eventos",
+      description:
+        "Jornadas de formación y eventos con drones para colegios, casas de juventud, escuelas de tiempo libre y polideportivos, donde los protagonistas son ellos.",
+      href: "/servicios/jornadas-eventos",
+    },
+    {
+      icon: "trophy",
+      title: "Cursos y talleres",
+      description:
+        "Talleres intensivos y cursos de introducción al pilotaje, pensados para grupos que quieren aprender rápido y con seguridad en pocas sesiones.",
+      href: "/servicios/cursos-talleres",
+    },
+  ] as (CardWithIcon & { href: string })[],
+});
+
+const benefitsContent = await getContent("home.benefits", {
+  items: [
+    {
+      icon: "shield",
+      title: "Seguridad ante todo",
+      description: "Protocolos claros, espacios controlados y material adaptado a cada edad para volar sin sobresaltos.",
+    },
+    {
+      icon: "spark",
+      title: "Formación de calidad",
+      description: "Monitores especializados y una progresión pensada para que cada piloto avance a su ritmo.",
+    },
+    {
+      icon: "compass",
+      title: "Aprendizaje STEM",
+      description: "Física, tecnología y trabajo en equipo, aprendidos jugando y volando drones de verdad.",
+    },
+    {
+      icon: "book",
+      title: "Diversión garantizada",
+      description: "El objetivo es que disfruten aprendiendo: por eso el 100% de las sesiones incluyen vuelo real.",
+    },
+  ] as CardWithIcon[],
+});
+
+const skillsContent = await getContent("home.skills", {
+  title: "Los drones han llegado para quedarse",
+  description:
+    "Su versatilidad los está convirtiendo en herramientas clave en fotografía, cine, deporte, seguridad y salvamento, agricultura, inspecciones industriales o transporte. Volar drones desde pequeños desarrolla habilidades que les acompañarán toda la vida.",
+  items: [
+    "Concentración y paciencia",
+    "Coordinación y motricidad fina",
+    "Pensamiento espacial",
+    "Trabajo en equipo",
+    "Resolución de problemas",
+    "Responsabilidad y autocontrol",
+  ],
+  highlightTitle: "¿Sabías que nuestro mejor piloto, campeón, tiene solo 13 años?",
+  highlightText:
+    "Desde los 8 años es la edad ideal para empezar a volar drones, por los múltiples beneficios que aporta a su desarrollo. Cuanto antes empiezan, más disfrutan del camino.",
+});
+
+const zaragozaContent = await getContent("home.zaragoza", {
+  zaragozaTitle: "¡Estamos en Zaragoza!",
+  zaragozaText: "Realizamos actividades de forma habitual en Zaragoza y alrededores, en colegios, ayuntamientos y entidades juveniles.",
+  outsideTitle: "¿Fuera de Aragón?",
+  outsideText:
+    "También nos desplazamos fuera de Aragón para organizar tu actividad o taller, sin necesidad de un número mínimo de participantes. El precio será algo más elevado para cubrir el desplazamiento.",
+});
+
+const audiences = ["Colegios", "Ayuntamientos", "Casas de juventud", "Escuelas de tiempo libre", "Polideportivos"];
+---
+
+<Layout
+  title="Actividades con drones para niños en Zaragoza"
+  description="En DronEduca realizamos actividades extraescolares, jornadas, eventos y cursos de drones para niños en Zaragoza. Aprenden a volar con seguridad desde los 8 años."
+>
+  <section class="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
+    <div class="pointer-events-none absolute -right-24 top-10 size-96 rounded-full bg-sky-100 blur-3xl"></div>
+    <div class="pointer-events-none absolute -left-24 top-64 size-72 rounded-full bg-amber-100 blur-3xl"></div>
+
+    <div class="container-page relative grid gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:items-center lg:py-28">
+      <div>
+        <span class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+          <Icon name="map-pin" class="size-4" />
+          {hero.badge}
+        </span>
+        <h1 class="mt-5 font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl lg:text-[3.4rem]">
+          {hero.title}
+        </h1>
+        <p class="mt-5 max-w-xl text-lg text-navy-600">
+          {hero.description}
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Button href="/contacto" variant="primary">
+            Solicitar una actividad
+            <Icon name="arrow-right" class="size-4" />
+          </Button>
+          <Button href="/servicios" variant="ghost">Ver todos los servicios</Button>
+        </div>
+
+        <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {hero.stats.map((stat: Stat) => (
+            <div>
+              <p class="font-display text-2xl font-extrabold text-navy-900">{stat.value}</p>
+              <p class="text-xs text-navy-500">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="relative mx-auto grid size-full max-w-md place-items-center rounded-[2.5rem] bg-white p-10 shadow-2xl shadow-sky-900/10 ring-1 ring-navy-100">
+          <span class="absolute -right-4 -top-4 grid size-16 place-items-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/40">
+            <Icon name="propeller" class="size-9" />
+          </span>
+          <Icon name="drone" class="size-40 text-sky-600" />
+          <span class="absolute -bottom-4 -left-4 grid size-16 place-items-center rounded-2xl bg-sky-600 text-white shadow-lg shadow-sky-600/40">
+            <Icon name="shield" class="size-9" />
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-y border-navy-100 bg-white py-6">
+    <div class="container-page flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm font-semibold text-navy-500">
+      <span>Trabajamos con:</span>
+      {audiences.map((a) => (
+        <span class="text-navy-700">{a}</span>
+      ))}
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page">
+      <SectionHeading eyebrow="¿A qué nos dedicamos?" title="Tres formas de volar con nosotros" />
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        {servicesContent.items.map((service: CardWithIcon & { href: string }) => (
+          <a
+            href={service.href}
+            class="group flex flex-col rounded-3xl border border-navy-100 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/10"
+          >
+            <span class="grid size-12 place-items-center rounded-2xl bg-sky-50 text-sky-600 transition-colors group-hover:bg-sky-600 group-hover:text-white">
+              <Icon name={service.icon as any} class="size-6" />
+            </span>
+            <h3 class="mt-5 font-display text-xl font-bold text-navy-900">{service.title}</h3>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-navy-600">{service.description}</p>
+            <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-sky-700">
+              Saber más
+              <Icon name="arrow-right" class="size-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-navy-950 py-20 text-white sm:py-24">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Por qué elegir DronEduca"
+        title="Explorar, crecer y aprender"
+        class="[&_span]:bg-white/10 [&_span]:text-sky-300 [&_h2]:text-white"
+      />
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {benefitsContent.items.map((benefit: CardWithIcon) => (
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <span class="grid size-11 place-items-center rounded-xl bg-sky-500/20 text-sky-300">
+              <Icon name={benefit.icon as any} class="size-6" />
+            </span>
+            <h3 class="mt-4 font-display text-lg font-bold text-white">{benefit.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-navy-300">{benefit.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-12 lg:grid-cols-2 lg:items-center">
+      <div>
+        <span class="inline-block rounded-full bg-amber-50 px-4 py-1 text-xs font-bold uppercase tracking-wide text-amber-700">
+          Desarrollo y habilidades
+        </span>
+        <h2 class="mt-3 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+          {skillsContent.title}
+        </h2>
+        <p class="mt-4 text-navy-600">
+          {skillsContent.description}
+        </p>
+        <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+          {skillsContent.items.map((skill: string) => (
+            <li class="flex items-center gap-2.5 text-sm font-medium text-navy-700">
+              <Icon name="check" class="size-5 shrink-0 text-sky-600" />
+              {skill}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="rounded-3xl border border-navy-100 bg-sky-50 p-8">
+        <p class="font-display text-lg font-bold text-navy-900">
+          {skillsContent.highlightTitle}
+        </p>
+        <p class="mt-3 text-sm leading-relaxed text-navy-600">
+          {skillsContent.highlightText}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-navy-100 bg-navy-50 py-16">
+    <div class="container-page grid gap-6 rounded-3xl bg-white p-8 shadow-sm ring-1 ring-navy-100 sm:grid-cols-2 sm:p-10">
+      <div>
+        <h3 class="font-display text-xl font-bold text-navy-900">{zaragozaContent.zaragozaTitle}</h3>
+        <p class="mt-2 text-sm text-navy-600">
+          {zaragozaContent.zaragozaText}
+        </p>
+      </div>
+      <div>
+        <h3 class="font-display text-xl font-bold text-navy-900">{zaragozaContent.outsideTitle}</h3>
+        <p class="mt-2 text-sm text-navy-600">
+          {zaragozaContent.outsideText}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <CtaSection />
+</Layout>

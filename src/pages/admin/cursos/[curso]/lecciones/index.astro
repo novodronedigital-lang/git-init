@@ -1,0 +1,87 @@
+---
+import Layout from "../../../../../layouts/Layout.astro";
+import Icon from "../../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses.map((course) => ({
+    params: { curso: course.id },
+    props: { course },
+  }));
+}
+
+const { course } = Astro.props;
+
+let n = 0;
+const flatLessons = course.data.modules.flatMap((mod) =>
+  mod.lessons.map((title) => {
+    n += 1;
+    return { number: n, title, moduleTitle: mod.title };
+  }),
+);
+---
+
+<Layout title={`Lecciones · ${course.data.title}`} description="Gestión de lecciones del curso.">
+  <section class="bg-sky-50/60 py-12 sm:py-16">
+    <div class="container-page">
+      <a href="/admin" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
+      <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">
+        Lecciones · {course.data.title}
+      </h1>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20">
+    <div class="container-page max-w-3xl">
+      <p id="loading-state" class="text-sm text-navy-500">Cargando estado de las lecciones...</p>
+      <div id="lessons-list" class="hidden space-y-2">
+        {flatLessons.map((lesson) => (
+          <a
+            href={`/admin/cursos/${course.id}/lecciones/${lesson.number}`}
+            data-lesson-number={lesson.number}
+            class="flex items-center justify-between gap-4 rounded-2xl border border-navy-100 bg-white px-5 py-4 transition-colors hover:border-sky-300"
+          >
+            <span>
+              <span class="block text-xs font-semibold uppercase tracking-wide text-navy-400">{lesson.moduleTitle}</span>
+              <span class="block text-sm font-semibold text-navy-800">{lesson.title}</span>
+            </span>
+            <span data-lesson-status class="inline-flex items-center gap-1.5 rounded-full bg-navy-50 px-3 py-1 text-xs font-bold text-navy-500">
+              Sin contenido
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { requireAdmin } from "../../../../../lib/admin";
+  import { supabase } from "../../../../../lib/supabase";
+
+  const admin = await requireAdmin();
+  if (admin) {
+    const courseSlug = window.location.pathname.split("/")[3];
+
+    const loadingState = document.getElementById("loading-state");
+    const list = document.getElementById("lessons-list");
+
+    const { data: lessons } = await supabase.from("lessons").select("lesson_order").eq("course_slug", courseSlug);
+    const publishedOrders = new Set((lessons ?? []).map((l) => l.lesson_order));
+
+    loadingState?.classList.add("hidden");
+    list?.classList.remove("hidden");
+
+    document.querySelectorAll<HTMLElement>("[data-lesson-number]").forEach((el) => {
+      const number = Number(el.dataset.lessonNumber);
+      if (publishedOrders.has(number)) {
+        const status = el.querySelector<HTMLElement>("[data-lesson-status]");
+        if (status) {
+          status.textContent = "Publicada";
+          status.className = "inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700";
+        }
+      }
+    });
+  }
+</script>

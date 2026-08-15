@@ -1,0 +1,52 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Icon from "../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" });
+---
+
+<Layout
+  title="Blog"
+  description="Artículos sobre drones, educación y actividades para niños: consejos, guías y novedades del proyecto DronEduca."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Blog
+      </span>
+      <h1 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+        Ideas, guías y novedades sobre drones para niños
+      </h1>
+      <p class="mx-auto mt-5 max-w-xl text-lg text-navy-600">
+        Consejos para familias, docentes y entidades que quieren acercar el mundo de los drones a niños y jóvenes.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {posts.map((post) => (
+        <a
+          href={`/blog/${post.id}`}
+          class="group flex flex-col rounded-3xl border border-navy-100 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/10"
+        >
+          <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+            {post.data.category}
+          </span>
+          <h2 class="mt-4 font-display text-lg font-bold text-navy-900">{post.data.title}</h2>
+          <p class="mt-2 flex-1 text-sm leading-relaxed text-navy-600">{post.data.description}</p>
+          <div class="mt-5 flex items-center justify-between text-xs text-navy-400">
+            <time datetime={post.data.pubDate.toISOString()}>{dateFormatter.format(post.data.pubDate)}</time>
+            <span class="inline-flex items-center gap-1 font-bold text-sky-700">
+              Leer
+              <Icon name="arrow-right" class="size-3.5 transition-transform group-hover:translate-x-1" />
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>

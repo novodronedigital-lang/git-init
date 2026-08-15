@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(mkdir -p \"/Users/ikerluzonsola/Desktop/DRONEDUCA WEB/.claude\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4321)",
+      "Bash(python3 -c \"import cairosvg\")",
+      "Bash(npx astro *)"
+    ]
+  }
+}

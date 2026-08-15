@@ -1,0 +1,98 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Icon from "../../components/Icon.astro";
+import Button from "../../components/Button.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import CtaSection from "../../components/CtaSection.astro";
+
+const services = [
+  {
+    icon: "users" as const,
+    title: "Actividades extraescolares",
+    description:
+      "Clases semanales de drones en horario extraescolar, con una progresión por niveles pensada para todo el curso.",
+    bullets: ["Sesiones semanales en el propio colegio", "Grupos reducidos por nivel", "Progresión de teoría a vuelo real"],
+    href: "/servicios/actividades-extraescolares",
+  },
+  {
+    icon: "calendar" as const,
+    title: "Jornadas y eventos",
+    description:
+      "Jornadas puntuales de formación y eventos con drones para colegios, ayuntamientos y entidades juveniles.",
+    bullets: ["Formato de medio día o día completo", "Ideal para ferias, semanas culturales o campamentos", "Nos desplazamos fuera de Aragón"],
+    href: "/servicios/jornadas-eventos",
+  },
+  {
+    icon: "trophy" as const,
+    title: "Cursos y talleres",
+    description:
+      "Talleres intensivos de introducción al pilotaje para grupos que quieren aprender rápido y con seguridad.",
+    bullets: ["Formato intensivo en pocas sesiones", "Perfecto para campamentos y vacaciones", "Introducción a la competición de drones"],
+    href: "/servicios/cursos-talleres",
+  },
+];
+---
+
+<Layout
+  title="Servicios"
+  description="Descubre los servicios de DronEduca: actividades extraescolares, jornadas y eventos, y cursos y talleres de drones para niños y jóvenes en Zaragoza."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Servicios
+      </span>
+      <h1 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+        Tres formas de llevar los drones a tu colegio o entidad
+      </h1>
+      <p class="mx-auto mt-5 max-w-xl text-lg text-navy-600">
+        Elige el formato que mejor encaje contigo: continuidad durante el curso, una jornada puntual o un taller
+        intensivo. En todos los casos, seguridad y diversión van de la mano.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-6 md:grid-cols-3">
+      {services.map((service) => (
+        <div class="flex flex-col rounded-3xl border border-navy-100 bg-white p-7 shadow-sm">
+          <span class="grid size-12 place-items-center rounded-2xl bg-sky-50 text-sky-600">
+            <Icon name={service.icon} class="size-6" />
+          </span>
+          <h2 class="mt-5 font-display text-xl font-bold text-navy-900">{service.title}</h2>
+          <p class="mt-2 text-sm leading-relaxed text-navy-600">{service.description}</p>
+          <ul class="mt-4 flex-1 space-y-2">
+            {service.bullets.map((bullet) => (
+              <li class="flex items-start gap-2 text-sm text-navy-700">
+                <Icon name="check" class="mt-0.5 size-4 shrink-0 text-sky-600" />
+                {bullet}
+              </li>
+            ))}
+          </ul>
+          <Button href={service.href} variant="secondary" class="mt-6 w-full">
+            Ver detalles
+            <Icon name="arrow-right" class="size-4" />
+          </Button>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="border-t border-navy-100 bg-navy-50 py-16">
+    <div class="container-page">
+      <SectionHeading eyebrow="¿No sabes por dónde empezar?" title="Te ayudamos a elegir el mejor formato" />
+      <div class="mx-auto mt-8 max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-navy-100">
+        <p class="text-navy-600">
+          Cuéntanos el tipo de entidad, el número de participantes y la fecha aproximada, y te recomendamos el
+          formato que mejor se adapta: extraescolar, jornada puntual o taller intensivo.
+        </p>
+        <Button href="/contacto" variant="primary" class="mt-6">
+          Cuéntanos tu caso
+          <Icon name="arrow-right" class="size-4" />
+        </Button>
+      </div>
+    </div>
+  </section>
+
+  <CtaSection />
+</Layout>

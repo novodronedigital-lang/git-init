@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Baloo 2", "system-ui", sans-serif;
+  --font-body: "Inter", "system-ui", sans-serif;
+
+  /* Sky / aviation blue — primary brand color */
+  --color-sky-50: #eef7ff;
+  --color-sky-100: #d9edff;
+  --color-sky-200: #b7dcff;
+  --color-sky-300: #86c4ff;
+  --color-sky-400: #4ea1ff;
+  --color-sky-500: #227aff;
+  --color-sky-600: #0f5aef;
+  --color-sky-700: #0c46c2;
+  --color-sky-800: #103b96;
+  --color-sky-900: #0f2e6e;
+  --color-sky-950: #0a1c46;
+
+  /* Energetic amber/orange — kids, energy, propeller accent */
+  --color-amber-50: #fff8ec;
+  --color-amber-100: #ffedc9;
+  --color-amber-200: #ffd889;
+  --color-amber-300: #ffbe4d;
+  --color-amber-400: #ffa521;
+  --color-amber-500: #fb8500;
+  --color-amber-600: #db6a00;
+  --color-amber-700: #b34f02;
+  --color-amber-800: #8f3d09;
+  --color-amber-900: #75340c;
+
+  /* Deep navy — text, footer, dark sections */
+  --color-navy-50: #f2f5fa;
+  --color-navy-100: #e2e8f2;
+  --color-navy-200: #c6d1e3;
+  --color-navy-300: #99abc9;
+  --color-navy-400: #6480a9;
+  --color-navy-500: #45608b;
+  --color-navy-600: #344a70;
+  --color-navy-700: #2a3c5b;
+  --color-navy-800: #1f2c44;
+  --color-navy-900: #131c2e;
+  --color-navy-950: #0a1120;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-navy-800);
+  background-color: #ffffff;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+@utility container-page {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+  @variant sm {
+    padding-inline: 2rem;
+  }
+}
+
+@utility prose-content {
+  & h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--color-navy-900);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  & p {
+    margin-bottom: 1rem;
+    line-height: 1.75;
+  }
+  & ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  & a {
+    color: var(--color-sky-600);
+    text-decoration: underline;
+  }
+}

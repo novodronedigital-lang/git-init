@@ -1,0 +1,70 @@
+---
+import { NAV_LINKS, SITE } from "../data/site";
+import Icon from "./Icon.astro";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-navy-950 text-navy-200">
+  <div class="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
+    <div class="lg:col-span-2">
+      <a href="/" class="flex items-center">
+        <img src="/brand/logo-lockup-on-dark.png" alt={SITE.name} class="h-8 w-auto" />
+      </a>
+      <p class="mt-4 max-w-sm text-sm leading-relaxed text-navy-300">
+        {SITE.description}
+      </p>
+      <div class="mt-5 flex gap-3">
+        <a
+          href={SITE.instagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram de DronEduca"
+          class="grid size-10 place-items-center rounded-full border border-navy-700 text-navy-200 transition-colors hover:border-sky-500 hover:text-sky-400"
+        >
+          <Icon name="instagram" class="size-5" />
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="font-display text-sm font-bold uppercase tracking-wide text-white">Navegación</h3>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {NAV_LINKS.map((link) => (
+          <li>
+            <a href={link.href} class="text-navy-300 transition-colors hover:text-sky-400">
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="font-display text-sm font-bold uppercase tracking-wide text-white">Contacto</h3>
+      <ul class="mt-4 space-y-3 text-sm text-navy-300">
+        <li class="flex items-start gap-2.5">
+          <Icon name="map-pin" class="mt-0.5 size-4 shrink-0 text-sky-400" />
+          {SITE.location}
+        </li>
+        <li class="flex items-start gap-2.5">
+          <Icon name="mail" class="mt-0.5 size-4 shrink-0 text-sky-400" />
+          <a href={`mailto:${SITE.email}`} class="hover:text-sky-400">{SITE.email}</a>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <Icon name="phone" class="mt-0.5 size-4 shrink-0 text-sky-400" />
+          <a href={`tel:${SITE.phone.replace(/\s/g, "")}`} class="hover:text-sky-400">{SITE.phone}</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-navy-800">
+    <div class="container-page flex flex-col gap-2 py-6 text-xs text-navy-400 sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} {SITE.name}. Todos los derechos reservados.</p>
+      <p>
+        Estas actividades son de carácter extraescolar y no otorgan título ni licencia oficial de piloto de drones.
+      </p>
+    </div>
+  </div>
+</footer>

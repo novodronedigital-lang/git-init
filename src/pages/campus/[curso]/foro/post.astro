@@ -1,0 +1,162 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import Icon from "../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses
+    .filter((course) => course.data.forum)
+    .map((course) => ({
+      params: { curso: course.id },
+      props: { course },
+    }));
+}
+
+const { course } = Astro.props;
+---
+
+<Layout title={`Post · Foro · ${course.data.title}`} description="Post del foro del curso.">
+  <section class="bg-sky-50/60 py-12 sm:py-16">
+    <div class="container-page">
+      <a href={`/campus/${course.id}/foro`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+        ← Foro
+      </a>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20">
+    <div class="container-page max-w-2xl">
+      <p id="loading-state" class="text-sm text-navy-500">Cargando post...</p>
+      <p id="not-found-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+        No se ha encontrado este post.
+      </p>
+
+      <div id="post-content" class="hidden">
+        <h1 id="post-title" class="font-display text-2xl font-extrabold leading-tight text-navy-900 sm:text-3xl"></h1>
+        <p id="post-meta" class="mt-2 text-sm text-navy-500"></p>
+        <p id="post-body" class="prose-content mt-6 whitespace-pre-line"></p>
+
+        <h2 class="mt-10 font-display text-lg font-bold text-navy-900">Respuestas</h2>
+        <div id="replies-list" class="mt-4 space-y-4"></div>
+
+        <form id="reply-form" class="mt-6 rounded-3xl border border-navy-100 bg-white p-6 shadow-sm" novalidate>
+          <label for="reply-body" class="text-sm font-semibold text-navy-800">Escribe una respuesta</label>
+          <textarea
+            id="reply-body"
+            rows="3"
+            required
+            class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+          ></textarea>
+          <button
+            type="submit"
+            class="mt-4 inline-flex items-center gap-2 rounded-full bg-sky-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-sky-600/30 transition-colors hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Icon name="arrow-right" class="size-4" />
+            Responder
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <template id="reply-template">
+    <div class="rounded-2xl bg-navy-50 p-4">
+      <p class="text-xs font-bold text-navy-500" data-field="meta"></p>
+      <p class="mt-1 text-sm text-navy-700 whitespace-pre-line" data-field="body"></p>
+    </div>
+  </template>
+</Layout>
+
+<script>
+  import { requireSession } from "../../../../lib/auth";
+  import { supabase } from "../../../../lib/supabase";
+
+  const session = await requireSession();
+  if (session) {
+    const courseSlug = window.location.pathname.split("/")[2];
+    const postId = new URLSearchParams(window.location.search).get("id");
+
+    const loadingState = document.getElementById("loading-state");
+    const notFoundState = document.getElementById("not-found-state");
+    const contentEl = document.getElementById("post-content");
+    const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+    async function loadNames(userIds: string[]) {
+      const { data } = userIds.length
+        ? await supabase.from("forum_authors").select("id, full_name").in("id", userIds)
+        : { data: [] };
+      return new Map((data ?? []).map((a) => [a.id, a.full_name || "Alumno"]));
+    }
+
+    async function loadReplies() {
+      const repliesList = document.getElementById("replies-list")!;
+      const template = document.getElementById("reply-template") as HTMLTemplateElement;
+      repliesList.innerHTML = "";
+
+      const { data: replies } = await supabase
+        .from("forum_replies")
+        .select("id, user_id, body, created_at")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+
+      const names = await loadNames([...new Set((replies ?? []).map((r) => r.user_id))]);
+
+      for (const reply of replies ?? []) {
+        const node = template.content.cloneNode(true) as DocumentFragment;
+        node.querySelector('[data-field="meta"]')!.textContent =
+          `${names.get(reply.user_id) ?? "Alumno"} · ${dateFormatter.format(new Date(reply.created_at))}`;
+        node.querySelector('[data-field="body"]')!.textContent = reply.body;
+        repliesList.appendChild(node);
+      }
+    }
+
+    if (!postId) {
+      loadingState?.classList.add("hidden");
+      notFoundState?.classList.remove("hidden");
+    } else {
+      const { data: post } = await supabase
+        .from("forum_posts")
+        .select("id, title, body, user_id, created_at")
+        .eq("id", postId)
+        .maybeSingle();
+
+      loadingState?.classList.add("hidden");
+
+      if (!post) {
+        notFoundState?.classList.remove("hidden");
+      } else {
+        contentEl?.classList.remove("hidden");
+
+        const names = await loadNames([post.user_id]);
+        document.getElementById("post-title")!.textContent = post.title;
+        document.getElementById("post-meta")!.textContent =
+          `${names.get(post.user_id) ?? "Alumno"} · ${dateFormatter.format(new Date(post.created_at))}`;
+        document.getElementById("post-body")!.textContent = post.body;
+
+        await loadReplies();
+
+        const replyForm = document.getElementById("reply-form") as HTMLFormElement;
+        const replyBody = document.getElementById("reply-body") as HTMLTextAreaElement;
+
+        replyForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          if (!replyForm.reportValidity()) return;
+
+          const submitButton = replyForm.querySelector("button[type=submit]") as HTMLButtonElement;
+          submitButton.disabled = true;
+
+          const { error } = await supabase
+            .from("forum_replies")
+            .insert({ post_id: postId, user_id: session.user.id, body: replyBody.value });
+
+          submitButton.disabled = false;
+          if (!error) {
+            replyBody.value = "";
+            await loadReplies();
+          }
+        });
+      }
+    }
+  }
+</script>

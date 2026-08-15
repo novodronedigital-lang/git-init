@@ -1,0 +1,123 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+---
+
+<Layout title="Crear cuenta" description="Crea tu cuenta gratuita en el campus online de DronEduca para acceder a los cursos.">
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Campus DronEduca
+      </span>
+      <h1 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+        Crea tu cuenta gratis
+      </h1>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20">
+    <div class="container-page max-w-md">
+      <form id="signup-form" class="rounded-3xl border border-navy-100 bg-white p-6 shadow-sm sm:p-10" novalidate>
+        <div class="space-y-5">
+          <div>
+            <label for="full-name" class="text-sm font-semibold text-navy-800">Nombre y apellidos</label>
+            <input
+              id="full-name"
+              name="full-name"
+              type="text"
+              required
+              autocomplete="name"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="email" class="text-sm font-semibold text-navy-800">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label for="password" class="text-sm font-semibold text-navy-800">Contraseña</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              minlength="6"
+              autocomplete="new-password"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+            <p class="mt-1 text-xs text-navy-400">Mínimo 6 caracteres.</p>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Crear cuenta
+          <Icon name="arrow-right" class="size-4" />
+        </button>
+
+        <p id="form-error" class="mt-4 hidden rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert"></p>
+        <p id="form-success" class="mt-4 hidden rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status"></p>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-navy-600">
+        ¿Ya tienes cuenta?
+        <a href="/login" class="font-semibold text-sky-700 hover:underline">Accede aquí</a>
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { signUp } from "../lib/auth";
+
+  const form = document.getElementById("signup-form") as HTMLFormElement | null;
+  const errorBox = document.getElementById("form-error");
+  const successBox = document.getElementById("form-success");
+  const submitButton = form?.querySelector("button[type=submit]") as HTMLButtonElement | null;
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+
+    const fullName = (form.elements.namedItem("full-name") as HTMLInputElement).value;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+
+    errorBox?.classList.add("hidden");
+    successBox?.classList.add("hidden");
+    if (submitButton) submitButton.disabled = true;
+
+    const { data, error } = await signUp(email, password, fullName);
+
+    if (error) {
+      if (errorBox) {
+        errorBox.textContent = "No hemos podido crear la cuenta: " + error.message;
+        errorBox.classList.remove("hidden");
+      }
+      if (submitButton) submitButton.disabled = false;
+      return;
+    }
+
+    if (data.session) {
+      window.location.href = "/campus";
+      return;
+    }
+
+    // Supabase requiere confirmar el email antes de crear sesión.
+    if (successBox) {
+      successBox.textContent = "¡Cuenta creada! Revisa tu email para confirmarla y después accede desde el enlace de abajo.";
+      successBox.classList.remove("hidden");
+    }
+    form.reset();
+    if (submitButton) submitButton.disabled = false;
+  });
+</script>

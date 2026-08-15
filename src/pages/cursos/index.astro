@@ -1,0 +1,97 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Icon from "../../components/Icon.astro";
+import { getCollection } from "astro:content";
+
+const courses = await getCollection("courses");
+---
+
+<Layout
+  title="Cursos online"
+  description="Cursos online de DronEduca para aprender a volar drones a tu ritmo: desde un curso gratuito de iniciación hasta la formación profesional Novodrone Pilot."
+>
+  <section class="bg-sky-50/60 py-16 sm:py-20">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Formación online
+      </span>
+      <h1 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
+        Cursos online de drones
+      </h1>
+      <p class="mx-auto mt-5 max-w-xl text-lg text-navy-600">
+        Desde un primer contacto gratuito hasta la formación profesional completa. Aprende a tu ritmo, con
+        seguimiento de tu progreso y exámenes para comprobar lo aprendido.
+      </p>
+      <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <a
+          href="/campus"
+          class="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-sky-600/30 transition-colors hover:bg-sky-700"
+        >
+          <Icon name="user" class="size-4" />
+          Ya tengo cuenta
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 sm:py-24">
+    <div class="container-page grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {courses.map((course) => {
+        const totalLessons = course.data.modules.reduce((sum, m) => sum + m.lessons.length, 0);
+        const isNovodrone = course.data.brand === "novodrone";
+        return (
+          <a
+            href={`/cursos/${course.id}`}
+            class:list={[
+              "group flex flex-col rounded-3xl p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl",
+              isNovodrone
+                ? "border border-navy-800 bg-navy-950 text-white hover:shadow-sky-900/30"
+                : "border border-navy-100 bg-white hover:shadow-sky-900/10",
+            ]}
+          >
+            {isNovodrone ? (
+              <img src="/brand/novodrone-logo.png" alt="Novodrone" class="h-8 w-auto" />
+            ) : (
+              <div class="flex items-center gap-2">
+                <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+                  {course.data.category}
+                </span>
+                <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                  {course.data.level}
+                </span>
+              </div>
+            )}
+
+            <h2 class:list={["mt-4 font-display text-xl font-bold", isNovodrone ? "text-white" : "text-navy-900"]}>
+              {course.data.title}
+            </h2>
+            {course.data.tagline && (
+              <p class:list={["mt-1 text-sm font-semibold", isNovodrone ? "text-sky-300" : "text-sky-700"]}>
+                {course.data.tagline}
+              </p>
+            )}
+            <p class:list={["mt-2 flex-1 text-sm leading-relaxed", isNovodrone ? "text-navy-300" : "text-navy-600"]}>
+              {course.data.description}
+            </p>
+
+            <div class="mt-5 flex items-center justify-between">
+              <span class:list={["font-display text-lg font-extrabold", isNovodrone ? "text-white" : "text-navy-900"]}>
+                {course.data.price}
+              </span>
+              <span class="text-xs opacity-70">{totalLessons} lecciones</span>
+            </div>
+            <span
+              class:list={[
+                "mt-4 inline-flex items-center gap-1 text-sm font-bold",
+                isNovodrone ? "text-sky-300" : "text-sky-700",
+              ]}
+            >
+              Ver curso
+              <Icon name="arrow-right" class="size-3.5 transition-transform group-hover:translate-x-1" />
+            </span>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+</Layout>
