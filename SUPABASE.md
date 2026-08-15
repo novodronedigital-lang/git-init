@@ -12,8 +12,9 @@ protegidos con Row Level Security (RLS) para que solo los usuarios autenticados 
 2. En **Project Settings → API**, copia la **Project URL** y la **anon public key**. Van en tu `.env` local como
    `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (ver `.env.example`).
 3. En **Authentication → URL Configuration**, configura:
-   - **Site URL**: `https://droneduca.es`
-   - **Redirect URLs**: `https://droneduca.es/*` (añade también `http://localhost:4321/*` mientras
+   - **Site URL**: `https://formacion.droneduca.es` (el login y el registro viven en el subdominio de
+     formación, no en el dominio raíz — ver `DEPLOY.md`)
+   - **Redirect URLs**: `https://formacion.droneduca.es/*` (añade también `http://localhost:4321/*` mientras
      desarrollas en local).
 
 ## 2. Ejecutar el esquema SQL

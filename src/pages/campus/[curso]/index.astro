@@ -2,6 +2,9 @@
 import Layout from "../../../layouts/Layout.astro";
 import Icon from "../../../components/Icon.astro";
 import { getCollection } from "astro:content";
+import { getContactoHref } from "../../../data/site";
+
+const contactoHref = getContactoHref();
 
 export async function getStaticPaths() {
   const courses = await getCollection("courses");
@@ -40,7 +43,7 @@ const flatLessons = course.data.modules.flatMap((mod) =>
 
       <div id="no-access-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
         Todavía no tienes acceso a este curso.
-        <a href="/contacto" class="font-semibold text-sky-700 hover:underline">Escríbenos</a>
+        <a href={contactoHref} class="font-semibold text-sky-700 hover:underline">Escríbenos</a>
         para solicitarlo.
       </div>
 

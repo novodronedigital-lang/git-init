@@ -10,20 +10,59 @@ export const SITE = {
   instagram: "https://instagram.com/droneduca",
 };
 
-export const NAV_LINKS = [
-  { label: "Inicio", href: "/" },
-  { label: "Quiénes somos", href: "/quienes-somos" },
-  {
-    label: "Servicios",
-    href: "/servicios",
-    children: [
-      { label: "Actividades extraescolares", href: "/servicios/actividades-extraescolares" },
-      { label: "Jornadas y eventos", href: "/servicios/jornadas-eventos" },
-      { label: "Cursos y talleres", href: "/servicios/cursos-talleres" },
-    ],
-  },
-  { label: "Precios", href: "/precios" },
-  { label: "Cursos online", href: "/cursos" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contacto", href: "/contacto" },
-];
+export const MARKETING_URL = "https://droneduca.es";
+export const FORMACION_URL = "https://formacion.droneduca.es";
+export const ADMIN_URL = "https://admin.droneduca.es";
+
+/**
+ * Qué subdominio se está generando en este build: "marketing" (droneduca.es, por defecto en local),
+ * "formacion" (formacion.droneduca.es) o "admin" (admin.droneduca.es).
+ */
+export const SITE_TARGET = (import.meta.env.PUBLIC_SITE_TARGET as string | undefined) || "marketing";
+
+/** En `astro dev` todo se sirve junto en localhost, así que los enlaces siempre deben ser relativos. */
+const IS_DEV = import.meta.env.DEV;
+
+interface NavLink {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+}
+
+/**
+ * Construye el nav según el subdominio actual: los enlaces que viven en el mismo dominio quedan relativos,
+ * y los que cruzan a otro subdominio se vuelven absolutos. En local (astro dev) todo es siempre relativo.
+ */
+export function getNavLinks(target: string = SITE_TARGET): NavLink[] {
+  const cursosHref = IS_DEV || target === "formacion" ? "/cursos" : `${FORMACION_URL}/cursos`;
+
+  const marketingHref = (path: string) => (IS_DEV || target === "marketing" ? path : `${MARKETING_URL}${path}`);
+
+  return [
+    { label: "Inicio", href: marketingHref("/") },
+    { label: "Quiénes somos", href: marketingHref("/quienes-somos") },
+    {
+      label: "Servicios",
+      href: marketingHref("/servicios"),
+      children: [
+        { label: "Actividades extraescolares", href: marketingHref("/servicios/actividades-extraescolares") },
+        { label: "Jornadas y eventos", href: marketingHref("/servicios/jornadas-eventos") },
+        { label: "Cursos y talleres", href: marketingHref("/servicios/cursos-talleres") },
+      ],
+    },
+    { label: "Precios", href: marketingHref("/precios") },
+    { label: "Cursos online", href: cursosHref },
+    { label: "Blog", href: marketingHref("/blog") },
+    { label: "Contacto", href: marketingHref("/contacto") },
+  ];
+}
+
+/** Href del logo: a la home de marketing, absoluto si estamos en otro subdominio (nunca en local). */
+export function getHomeHref(target: string = SITE_TARGET): string {
+  return IS_DEV || target === "marketing" ? "/" : `${MARKETING_URL}/`;
+}
+
+/** Href de contacto, para enlaces sueltos fuera del nav que también cruzan de dominio (p. ej. desde /campus). */
+export function getContactoHref(target: string = SITE_TARGET): string {
+  return IS_DEV || target === "marketing" ? "/contacto" : `${MARKETING_URL}/contacto`;
+}

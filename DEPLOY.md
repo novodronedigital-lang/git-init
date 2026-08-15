@@ -1,8 +1,11 @@
-# Despliegue — droneduca.es
+# Despliegue — droneduca.es · formacion.droneduca.es · admin.droneduca.es
 
-Este proyecto compila como sitio **estático** (`npm run build` → carpeta `dist/`), sin servidor Node. Sustituye por
-completo al WordPress que hay ahora mismo en `droneduca.es`: web de marketing + plataforma de formación (`/cursos`,
-`/campus`) en un único sitio, en el dominio raíz.
+Este proyecto compila como sitio **estático** (`npm run build` → carpeta `dist/`), sin servidor Node. Un mismo
+código fuente se reparte en **tres subdominios**:
+
+- **`droneduca.es`** — web corporativa (Inicio, Quiénes somos, Servicios, Precios, Blog, Contacto).
+- **`formacion.droneduca.es`** — catálogo de cursos, campus del alumno, login y registro.
+- **`admin.droneduca.es`** — panel de administración (sin enlace en ningún menú público).
 
 Estos pasos los debe ejecutar quien tenga acceso al panel de Sered y a la cuenta de Supabase — no son acciones que
 pueda hacer por ti sin esas credenciales.
@@ -33,14 +36,28 @@ Con confirmación de que la copia de seguridad está hecha:
 
 `public_html` debe quedar vacío antes del siguiente paso.
 
-## 2. Configurar Supabase
+## 2. Crear los subdominios en Sered
 
-Sigue `SUPABASE.md` para crear el proyecto y ejecutar el SQL. En **Authentication → URL Configuration**:
+En el panel de Sered (normalmente cPanel → Subdominios), crea:
 
-- Site URL: `https://droneduca.es`
-- Redirect URLs: `https://droneduca.es/*` (añade también `http://localhost:4321/*` mientras desarrolles en local)
+- `formacion` sobre `droneduca.es` → genera `formacion.droneduca.es`. Cuando te pida la carpeta raíz, deja que
+  cPanel te proponga la suya propia (algo tipo `formacion.droneduca.es` o `public_html/formacion`), **distinta**
+  de `public_html`.
+- `admin` sobre `droneduca.es` → genera `admin.droneduca.es`, con su propia carpeta también.
 
-## 3. Configurar las variables de entorno locales
+Apunta el nombre de cada carpeta y, si Sered te da credenciales FTP específicas para cada subdominio (cPanel suele
+crear cuentas FTP separadas por subdominio, como vimos al principio con la cuenta jaulada), apunta también esas.
+
+## 3. Configurar Supabase
+
+Sigue `SUPABASE.md` para crear el proyecto y ejecutar el SQL. En **Authentication → URL Configuration** (el login
+ahora vive en el subdominio de formación, no en el raíz):
+
+- Site URL: `https://formacion.droneduca.es`
+- Redirect URLs: `https://formacion.droneduca.es/*` (añade también `http://localhost:4321/*` mientras desarrolles
+  en local)
+
+## 4. Configurar las variables de entorno locales
 
 ```bash
 cp .env.example .env
@@ -52,38 +69,36 @@ PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 ```
 
 Estas claves quedan incrustadas en el build estático — la `anon key` de Supabase está pensada para ser pública, la
-seguridad real la dan las políticas RLS ya configuradas en `SUPABASE.md`.
+seguridad real la dan las políticas RLS ya configuradas en `SUPABASE.md`. En local, `astro dev` siempre se
+comporta como el sitio de marketing con enlaces relativos — no hace falta tocar nada para desarrollar, todo se
+navega junto en `localhost:4321`.
 
-## 4. Compilar
+## 5. Compilar y subir cada subdominio por FTP (manual)
+
+Aquí cada subdominio necesita su **propio build**, porque cada uno tiene una URL base (`site`) distinta:
 
 ```bash
-npm install
-npm run build
+# droneduca.es
+SITE_URL=https://droneduca.es PUBLIC_SITE_TARGET=marketing npm run build
+# → sube el contenido de dist/ a public_html, EXCEPTO las carpetas cursos/, campus/, login/, registro/, admin/
+
+# formacion.droneduca.es
+SITE_URL=https://formacion.droneduca.es PUBLIC_SITE_TARGET=formacion npm run build
+# → sube dist/cursos, dist/campus, dist/login, dist/registro y dist/robots.txt a la carpeta de formacion.droneduca.es
+# → sube dist/admin (el contenido de esa carpeta, no la carpeta en sí) a la carpeta de admin.droneduca.es
 ```
 
-Esto genera la carpeta `dist/` con HTML/CSS/JS listos para subir. `astro.config.mjs` ya está configurado con
-`site: "https://droneduca.es"`, así que no hace falta tocar nada de configuración para el dominio raíz.
+En ambos casos, cada `npm run build` genera **todas** las páginas igual (Astro no distingue qué vas a subir), la
+separación real está en qué carpetas de `dist/` subes a cada sitio.
 
-## 5. Subir por FTP
-
-1. Conéctate por FTP a Sered.
-2. Entra en `public_html` (ya vacío tras el paso 1).
-3. Sube **todo el contenido de `dist/`** (no la carpeta `dist` en sí, sino lo que hay dentro).
-4. Visita `https://droneduca.es` para comprobar que carga la web nueva.
-
-## 6. Cada vez que haya cambios (manual)
-
-Repite los pasos 4 y 5: `npm run build` y volver a subir el contenido de `dist/` por FTP (sobrescribiendo lo
-anterior). Esto sigue funcionando siempre como plan B, aunque tengas montada la publicación automática de abajo.
-
-## 7. Publicación automática desde el admin panel (recomendado)
+## 6. Publicación automática desde el admin panel (recomendado, en vez del paso 5 a mano)
 
 Desde que existe `/admin/contenido` (el CMS de los textos de las páginas), lo normal es publicar con el botón
 **"Publicar cambios"** del panel en vez de hacerlo a mano. Esto requiere montar una vez lo siguiente (los pasos con
 🔒 los ejecutas tú, nunca deben pasar por un chat):
 
-1. **Crear el repositorio en GitHub.** El proyecto ya es un repositorio git local (`git init` ya hecho, con un
-   primer commit). 🔒 Crea un repo nuevo (puede ser privado) en [github.com/new](https://github.com/new), sin
+1. **Crear el repositorio en GitHub.** El proyecto ya es un repositorio git local (`git init` ya hecho, con
+   commits). 🔒 Crea un repo nuevo (puede ser privado) en [github.com/new](https://github.com/new), sin
    inicializarlo con README, y luego:
    ```bash
    git remote add origin https://github.com/tu-usuario/tu-repo.git
@@ -91,10 +106,14 @@ Desde que existe `/admin/contenido` (el CMS de los textos de las páginas), lo n
    git push -u origin main
    ```
 2. 🔒 **Secrets del repositorio** (GitHub → tu repo → Settings → Secrets and variables → Actions → New repository
-   secret). Añade estos 5:
-   - `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` — los mismos valores que tienes en tu `.env`.
-   - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — las credenciales FTP de Sered (las mismas que usas en
-     FileZilla).
+   secret). El workflow (`.github/workflows/deploy.yml`) espera hasta 11:
+   - `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` — los mismos valores que tienes en tu `.env`.
+   - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — credenciales FTP de `droneduca.es` (public_html).
+   - `FTP_SERVER_FORMACION`, `FTP_USERNAME_FORMACION`, `FTP_PASSWORD_FORMACION` — credenciales FTP de la carpeta
+     de `formacion.droneduca.es` (paso 2 — si Sered usa la misma cuenta FTP para todo, repite los mismos valores
+     que arriba, cambiando solo si hace falta la carpeta de destino en el propio workflow).
+   - `FTP_SERVER_ADMIN`, `FTP_USERNAME_ADMIN`, `FTP_PASSWORD_ADMIN` — credenciales FTP de la carpeta de
+     `admin.droneduca.es`.
 3. 🔒 **Token de GitHub para la Edge Function**: en GitHub → tu avatar → Settings → Developer settings →
    Personal access tokens → Fine-grained tokens → Generate new token. Dale acceso **solo a este repositorio**, con
    permiso de **Contents: Read-only** y **Actions: Read and write**. Cópialo (solo se ve una vez).
@@ -110,8 +129,9 @@ Desde que existe `/admin/contenido` (el CMS de los textos de las páginas), lo n
    has ejecutado, hazlo ahora).
 
 A partir de aquí: guardas cambios en `/admin/contenido` → pulsas **"Publicar cambios"** en `/admin` → en 1-2
-minutos, `https://droneduca.es` muestra la versión nueva. Puedes seguir el progreso en la pestaña **Actions** del
-repositorio de GitHub.
+minutos, los tres dominios muestran la versión nueva. Puedes seguir el progreso en la pestaña **Actions** del
+repositorio de GitHub — el primer despliegue conviene vigilarlo por si algún nombre de carpeta o credencial FTP no
+coincide exactamente con lo que espera el workflow (revisa `.github/workflows/deploy.yml`).
 
 ## Notas
 
@@ -120,6 +140,5 @@ repositorio de GitHub.
 - El contenido de las lecciones y los exámenes (vídeo, texto, preguntas) se gestiona desde
   `/admin/cursos/<curso>/lecciones` y `/admin/cursos/<curso>/examen` (o directamente en el Table Editor de
   Supabase como alternativa) — ver `SUPABASE.md`.
-- El panel de admin no tiene por qué anunciarse en el menú público — si quieres que viva en un subdominio propio
-  (por ejemplo `admin.droneduca.es`), en Sered crea ese subdominio apuntando a la misma carpeta `public_html` (es
-  el mismo build; la protección real la da el login + `is_admin`, no la URL).
+- `admin.droneduca.es` no aparece enlazado en ningún menú público, y además su `robots.txt` bloquea toda
+  indexación — la protección real la da el login + `is_admin`, no la URL.

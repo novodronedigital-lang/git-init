@@ -21,13 +21,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      # ================================================================
+      # droneduca.es — web corporativa (todo excepto cursos/campus/
+      # login/registro/admin)
+      # ================================================================
+      - name: Build marketing site (droneduca.es)
         run: npm run build
         env:
+          SITE_URL: https://droneduca.es
+          PUBLIC_SITE_TARGET: marketing
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
 
-      - name: Deploy over FTP
+      - name: Deploy marketing site
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -35,3 +41,78 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: ./public_html/
+          exclude: |
+            **/cursos/**
+            **/campus/**
+            **/login/**
+            **/registro/**
+            **/admin/**
+
+      # ================================================================
+      # formacion.droneduca.es — catálogo, campus, login, registro
+      # admin.droneduca.es — panel de administración
+      # (mismo build, ambos subdominios se sirven de aquí)
+      # ================================================================
+      - name: Build app site (formacion.droneduca.es)
+        run: npm run build
+        env:
+          SITE_URL: https://formacion.droneduca.es
+          PUBLIC_SITE_TARGET: formacion
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Deploy cursos
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_FORMACION }}
+          username: ${{ secrets.FTP_USERNAME_FORMACION }}
+          password: ${{ secrets.FTP_PASSWORD_FORMACION }}
+          local-dir: ./dist/cursos/
+          server-dir: ./cursos/
+
+      - name: Deploy campus
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_FORMACION }}
+          username: ${{ secrets.FTP_USERNAME_FORMACION }}
+          password: ${{ secrets.FTP_PASSWORD_FORMACION }}
+          local-dir: ./dist/campus/
+          server-dir: ./campus/
+
+      - name: Deploy login
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_FORMACION }}
+          username: ${{ secrets.FTP_USERNAME_FORMACION }}
+          password: ${{ secrets.FTP_PASSWORD_FORMACION }}
+          local-dir: ./dist/login/
+          server-dir: ./login/
+
+      - name: Deploy registro
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_FORMACION }}
+          username: ${{ secrets.FTP_USERNAME_FORMACION }}
+          password: ${{ secrets.FTP_PASSWORD_FORMACION }}
+          local-dir: ./dist/registro/
+          server-dir: ./registro/
+
+      - name: Deploy robots.txt (formación)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_FORMACION }}
+          username: ${{ secrets.FTP_USERNAME_FORMACION }}
+          password: ${{ secrets.FTP_PASSWORD_FORMACION }}
+          local-dir: ./dist/
+          server-dir: ./
+          include: |
+            robots.txt
+
+      - name: Deploy admin panel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_ADMIN }}
+          username: ${{ secrets.FTP_USERNAME_ADMIN }}
+          password: ${{ secrets.FTP_PASSWORD_ADMIN }}
+          local-dir: ./dist/admin/
+          server-dir: ./

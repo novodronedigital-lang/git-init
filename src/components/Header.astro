@@ -1,10 +1,14 @@
 ---
-import { NAV_LINKS, SITE } from "../data/site";
+import { SITE, getNavLinks, getHomeHref, getContactoHref } from "../data/site";
 import Icon from "./Icon.astro";
 
 const currentPath = Astro.url.pathname;
+const navLinks = getNavLinks();
+const homeHref = getHomeHref();
+const contactoHref = getContactoHref();
 
 function isActive(href: string) {
+  if (href.startsWith("http")) return false;
   if (href === "/") return currentPath === "/";
   return currentPath.startsWith(href);
 }
@@ -12,12 +16,12 @@ function isActive(href: string) {
 
 <header class="sticky top-0 z-50 border-b border-navy-100 bg-white/90 backdrop-blur">
   <div class="container-page flex h-18 items-center justify-between py-3">
-    <a href="/" class="flex items-center">
+    <a href={homeHref} class="flex items-center">
       <img src="/brand/logo-lockup-on-light.png" alt={SITE.name} class="h-8 w-auto sm:h-9" />
     </a>
 
     <nav class="hidden items-center gap-1 lg:flex">
-      {NAV_LINKS.map((link) => (
+      {navLinks.map((link) => (
         <div class="group relative">
           <a
             href={link.href}
@@ -43,7 +47,7 @@ function isActive(href: string) {
     </nav>
 
     <div class="hidden lg:block">
-      <a href="/contacto" class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600">
+      <a href={contactoHref} class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600">
         Solicitar actividad
         <Icon name="arrow-right" class="size-4" />
       </a>
@@ -63,7 +67,7 @@ function isActive(href: string) {
 
   <div id="mobile-menu" class="hidden border-t border-navy-100 bg-white lg:hidden">
     <nav class="container-page flex flex-col gap-1 py-4">
-      {NAV_LINKS.map((link) => (
+      {navLinks.map((link) => (
         <div>
           <a href={link.href} class="block rounded-xl px-3 py-2.5 text-sm font-semibold text-navy-800 hover:bg-navy-50">
             {link.label}
@@ -79,7 +83,7 @@ function isActive(href: string) {
           )}
         </div>
       ))}
-      <a href="/contacto" class="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-5 py-3 text-sm font-bold text-white">
+      <a href={contactoHref} class="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-5 py-3 text-sm font-bold text-white">
         Solicitar actividad
         <Icon name="arrow-right" class="size-4" />
       </a>
