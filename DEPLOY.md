@@ -80,13 +80,16 @@ Aquí cada subdominio necesita su **propio build**, porque cada uno tiene una UR
 ```bash
 # droneduca.es
 SITE_URL=https://droneduca.es PUBLIC_SITE_TARGET=marketing npm run build
-# → sube el contenido de dist/ a public_html, EXCEPTO las carpetas cursos/, campus/, login/, registro/, admin/
+# → sube el contenido de dist/ a public_html/, EXCEPTO las carpetas cursos/, campus/, login/, registro/, admin/
 
-# formacion.droneduca.es
+# formacion.droneduca.es y admin.droneduca.es
 SITE_URL=https://formacion.droneduca.es PUBLIC_SITE_TARGET=formacion npm run build
-# → sube dist/cursos, dist/campus, dist/login, dist/registro y dist/robots.txt a la carpeta de formacion.droneduca.es
-# → sube dist/admin (el contenido de esa carpeta, no la carpeta en sí) a la carpeta de admin.droneduca.es
+# → sube dist/cursos, dist/campus, dist/login, dist/registro y dist/robots.txt a public_html/formacion/
+# → sube el CONTENIDO de dist/admin (no la carpeta en sí) a public_html/admin/
 ```
+
+Como `formacion.droneduca.es` y `admin.droneduca.es` son subcarpetas del mismo `public_html` (así los creaste en
+Sered), usas las mismas credenciales FTP de siempre — solo cambia la carpeta de destino en cada subida.
 
 En ambos casos, cada `npm run build` genera **todas** las páginas igual (Astro no distingue qué vas a subir), la
 separación real está en qué carpetas de `dist/` subes a cada sitio.
@@ -106,14 +109,11 @@ Desde que existe `/admin/contenido` (el CMS de los textos de las páginas), lo n
    git push -u origin main
    ```
 2. 🔒 **Secrets del repositorio** (GitHub → tu repo → Settings → Secrets and variables → Actions → New repository
-   secret). El workflow (`.github/workflows/deploy.yml`) espera hasta 11:
+   secret). El workflow (`.github/workflows/deploy.yml`) espera 5, ya que `formacion.droneduca.es` y
+   `admin.droneduca.es` son subcarpetas de `public_html` y comparten las mismas credenciales FTP que
+   `droneduca.es`:
    - `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` — los mismos valores que tienes en tu `.env`.
-   - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — credenciales FTP de `droneduca.es` (public_html).
-   - `FTP_SERVER_FORMACION`, `FTP_USERNAME_FORMACION`, `FTP_PASSWORD_FORMACION` — credenciales FTP de la carpeta
-     de `formacion.droneduca.es` (paso 2 — si Sered usa la misma cuenta FTP para todo, repite los mismos valores
-     que arriba, cambiando solo si hace falta la carpeta de destino en el propio workflow).
-   - `FTP_SERVER_ADMIN`, `FTP_USERNAME_ADMIN`, `FTP_PASSWORD_ADMIN` — credenciales FTP de la carpeta de
-     `admin.droneduca.es`.
+   - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — las credenciales FTP que ya usas para subir a `public_html`.
 3. 🔒 **Token de GitHub para la Edge Function**: en GitHub → tu avatar → Settings → Developer settings →
    Personal access tokens → Fine-grained tokens → Generate new token. Dale acceso **solo a este repositorio**, con
    permiso de **Contents: Read-only** y **Actions: Read and write**. Cópialo (solo se ve una vez).
