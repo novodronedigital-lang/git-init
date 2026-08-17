@@ -2,6 +2,7 @@
 import Layout from "../../../layouts/Layout.astro";
 import Icon from "../../../components/Icon.astro";
 import { CONTENT_SCHEMAS } from "../../../lib/content-schemas";
+import { adminPath } from "../../../lib/admin";
 
 export async function getStaticPaths() {
   return CONTENT_SCHEMAS.map((schema) => ({
@@ -16,7 +17,7 @@ const { schema } = Astro.props;
 <Layout title={schema.label} description="Editar contenido de la web.">
   <section class="bg-sky-50/60 py-12 sm:py-16">
     <div class="container-page">
-      <a href="/admin/contenido" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+      <a href={adminPath("/contenido")} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
         ← Contenido
       </a>
       <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">{schema.label}</h1>

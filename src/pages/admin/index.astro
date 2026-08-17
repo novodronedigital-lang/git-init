@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Icon from "../../components/Icon.astro";
 import { getCollection } from "astro:content";
+import { adminPath } from "../../lib/admin";
 
 const courses = await getCollection("courses");
 ---
@@ -32,7 +33,7 @@ const courses = await getCollection("courses");
       <div>
         <h2 class="font-display text-xl font-bold text-navy-900">Contenido</h2>
         <a
-          href="/admin/contenido"
+          href={adminPath("/contenido")}
           class="mt-4 flex items-center gap-4 rounded-2xl border border-navy-100 bg-white px-5 py-4 transition-colors hover:border-sky-300"
         >
           <Icon name="book" class="size-5 text-sky-600" />
@@ -43,7 +44,7 @@ const courses = await getCollection("courses");
       <div>
         <h2 class="font-display text-xl font-bold text-navy-900">Alumnos</h2>
         <a
-          href="/admin/alumnos"
+          href={adminPath("/alumnos")}
           class="mt-4 flex items-center gap-4 rounded-2xl border border-navy-100 bg-white px-5 py-4 transition-colors hover:border-sky-300"
         >
           <Icon name="users" class="size-5 text-sky-600" />
@@ -59,20 +60,20 @@ const courses = await getCollection("courses");
               <h3 class="font-display text-base font-bold text-navy-900">{course.data.title}</h3>
               <div class="mt-3 flex flex-wrap gap-2">
                 <a
-                  href={`/admin/cursos/${course.id}/lecciones`}
+                  href={adminPath(`/cursos/${course.id}/lecciones`)}
                   class="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 hover:bg-sky-100"
                 >
                   Lecciones
                 </a>
                 <a
-                  href={`/admin/cursos/${course.id}/examen`}
+                  href={adminPath(`/cursos/${course.id}/examen`)}
                   class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100"
                 >
                   Examen
                 </a>
                 {course.data.calendar && (
                   <a
-                    href={`/admin/cursos/${course.id}/calendario`}
+                    href={adminPath(`/cursos/${course.id}/calendario`)}
                     class="inline-flex items-center gap-1.5 rounded-full bg-navy-50 px-4 py-2 text-xs font-bold text-navy-700 hover:bg-navy-100"
                   >
                     Calendario

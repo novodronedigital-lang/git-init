@@ -66,3 +66,8 @@ export function getHomeHref(target: string = SITE_TARGET): string {
 export function getContactoHref(target: string = SITE_TARGET): string {
   return IS_DEV || target === "marketing" ? "/contacto" : `${MARKETING_URL}/contacto`;
 }
+
+/** Href al panel de administración desde fuera de él (p. ej. el botón "Admin" de /campus). */
+export function getAdminHref(): string {
+  return IS_DEV ? "/admin" : `${ADMIN_URL}/`;
+}

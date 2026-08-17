@@ -2,6 +2,7 @@
 import Layout from "../../../../../layouts/Layout.astro";
 import Icon from "../../../../../components/Icon.astro";
 import { getCollection } from "astro:content";
+import { adminHomePath } from "../../../../../lib/admin";
 
 export async function getStaticPaths() {
   const courses = await getCollection("courses");
@@ -17,7 +18,7 @@ const { course } = Astro.props;
 <Layout title={`Examen · ${course.data.title}`} description="Editar el examen del curso.">
   <section class="bg-sky-50/60 py-12 sm:py-16">
     <div class="container-page">
-      <a href="/admin" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
+      <a href={adminHomePath()} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
       <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">
         Examen · {course.data.title}
       </h1>
@@ -76,7 +77,8 @@ const { course } = Astro.props;
 
   const admin = await requireAdmin();
   if (admin) {
-    const courseSlug = window.location.pathname.split("/")[3];
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const courseSlug = parts[parts.indexOf("cursos") + 1];
 
     const loadingState = document.getElementById("loading-state");
     const form = document.getElementById("quiz-form") as HTMLFormElement;

@@ -2,6 +2,7 @@
 import Layout from "../../../../../layouts/Layout.astro";
 import Icon from "../../../../../components/Icon.astro";
 import { getCollection } from "astro:content";
+import { adminPath } from "../../../../../lib/admin";
 
 export async function getStaticPaths() {
   const courses = await getCollection("courses");
@@ -27,7 +28,7 @@ const { course, lesson } = Astro.props;
 <Layout title={`${lesson.title} · ${course.data.title}`} description="Editar lección.">
   <section class="bg-sky-50/60 py-12 sm:py-16">
     <div class="container-page">
-      <a href={`/admin/cursos/${course.id}/lecciones`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+      <a href={adminPath(`/cursos/${course.id}/lecciones`)} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
         ← Lecciones de {course.data.title}
       </a>
       <span class="mt-4 block text-xs font-semibold uppercase tracking-wide text-navy-400">{lesson.moduleTitle}</span>
@@ -95,9 +96,10 @@ const { course, lesson } = Astro.props;
 
   const admin = await requireAdmin();
   if (admin) {
-    const pathParts = window.location.pathname.split("/");
-    const courseSlug = pathParts[3];
-    const lessonOrder = Number(pathParts[5]);
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    const cursosIndex = pathParts.indexOf("cursos");
+    const courseSlug = pathParts[cursosIndex + 1];
+    const lessonOrder = Number(pathParts[cursosIndex + 3]);
     const moduleOrder = (window as unknown as { __lessonModuleOrder: number }).__lessonModuleOrder;
 
     const form = document.getElementById("lesson-form") as HTMLFormElement;

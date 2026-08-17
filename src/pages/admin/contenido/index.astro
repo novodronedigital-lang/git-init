@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { CONTENT_SCHEMAS } from "../../../lib/content-schemas";
+import { adminPath, adminHomePath } from "../../../lib/admin";
 
 const byPage = new Map<string, typeof CONTENT_SCHEMAS>();
 for (const schema of CONTENT_SCHEMAS) {
@@ -13,7 +14,7 @@ for (const schema of CONTENT_SCHEMAS) {
 <Layout title="Contenido" description="Editar el contenido de las páginas públicas.">
   <section class="bg-sky-50/60 py-12 sm:py-16">
     <div class="container-page">
-      <a href="/admin" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
+      <a href={adminHomePath()} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
       <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">Contenido</h1>
       <p class="mt-2 text-sm text-navy-500">
         Los cambios se guardan al instante, pero no se ven en la web real hasta que pulses "Publicar cambios" en el
@@ -30,7 +31,7 @@ for (const schema of CONTENT_SCHEMAS) {
           <div class="mt-4 space-y-2">
             {schemas.map((schema) => (
               <a
-                href={`/admin/contenido/${schema.key}`}
+                href={adminPath(`/contenido/${schema.key}`)}
                 class="block rounded-2xl border border-navy-100 bg-white px-5 py-4 text-sm font-semibold text-navy-800 transition-colors hover:border-sky-300"
               >
                 {schema.label}

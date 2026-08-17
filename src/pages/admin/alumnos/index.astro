@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { adminHomePath } from "../../../lib/admin";
 
 const courses = await getCollection("courses");
 const freeCourse = courses.find((c) => c.id === "drone-starter");
@@ -12,7 +13,7 @@ const paidCourses = courses
 <Layout title="Alumnos" description="Alumnos registrados y accesos a cursos.">
   <section class="bg-sky-50/60 py-12 sm:py-16">
     <div class="container-page">
-      <a href="/admin" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
+      <a href={adminHomePath()} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">← Admin</a>
       <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">Alumnos</h1>
     </div>
   </section>
