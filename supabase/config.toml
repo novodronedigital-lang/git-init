@@ -1,0 +1,6 @@
+[functions.publish]
+# La función ya comprueba por su cuenta la sesión y el is_admin (ver supabase/functions/publish/index.ts).
+# La verificación de JWT a nivel de plataforma tiene que estar desactivada aquí: si no, bloquea el preflight
+# CORS (la petición OPTIONS del navegador no lleva Authorization) y el botón "Publicar cambios" del admin
+# falla con "Failed to send a request to the Edge Function" sin más detalle.
+verify_jwt = false
