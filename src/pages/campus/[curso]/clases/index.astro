@@ -39,21 +39,31 @@ const flat = flattenLessons(course);
             href={`/campus/${course.id}/clases/${mi + 1}`}
             class="group overflow-hidden rounded-[18px] border border-navy-100 bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-navy-900/10"
           >
-            <div
-              class="relative flex aspect-video flex-col justify-end overflow-hidden p-3.5 text-white"
-              style={`background:linear-gradient(150deg, ${color}, #0a1120)`}
-            >
-              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-white/55">
-                <Icon name="camera" class="size-5" />
-                <span class="text-[11px]">Foto de {teacher}</span>
+            {mod.bannerImage ? (
+              <div class="aspect-video overflow-hidden bg-navy-950">
+                <img
+                  src={mod.bannerImage}
+                  alt={`${mod.title} — con ${teacher}`}
+                  class="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
               </div>
-              <span class="relative mb-auto self-start rounded-full bg-white/15 px-2.5 py-1 text-[10.5px] font-bold backdrop-blur-sm">
-                Con {teacher}
-              </span>
-              <span class="relative font-display text-[17px] font-extrabold leading-tight [text-shadow:0_2px_10px_rgb(0_0_0_/_0.35)]">
-                {mod.title}
-              </span>
-            </div>
+            ) : (
+              <div
+                class="relative flex aspect-video flex-col justify-end overflow-hidden p-3.5 text-white"
+                style={`background:linear-gradient(150deg, ${color}, #0a1120)`}
+              >
+                <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-white/55">
+                  <Icon name="camera" class="size-5" />
+                  <span class="text-[11px]">Foto de {teacher}</span>
+                </div>
+                <span class="relative mb-auto self-start rounded-full bg-white/15 px-2.5 py-1 text-[10.5px] font-bold backdrop-blur-sm">
+                  Con {teacher}
+                </span>
+                <span class="relative font-display text-[17px] font-extrabold leading-tight [text-shadow:0_2px_10px_rgb(0_0_0_/_0.35)]">
+                  {mod.title}
+                </span>
+              </div>
+            )}
             <div class="p-4">
               <p class="text-[11.5px] font-bold text-sky-700">Módulo {mi + 1}</p>
               <p data-module-count={mi} class="mt-0.5 text-[11.5px] text-navy-500">{mod.lessons.length} lecciones</p>

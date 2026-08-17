@@ -39,6 +39,8 @@ const courses = defineCollection({
       z.object({
         title: z.string(),
         instructor: z.string().optional(),
+        /** Banner horizontal (1600x900 recomendado) para la parrilla de Clases y la ficha de Acerca de. */
+        bannerImage: z.string().optional(),
         lessons: z.array(z.string()),
       }),
     ),

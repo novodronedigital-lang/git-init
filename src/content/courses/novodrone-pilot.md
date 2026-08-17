@@ -17,6 +17,7 @@ includes:
 modules:
   - title: "Fundamentos y normativa"
     instructor: "Jorge Legua"
+    bannerImage: "/campus/novodrone-pilot/jorge-legua.jpg"
     lessons:
       - "Teoría completa del vuelo con drones"
       - "Normativa europea y categorías de vuelo"
@@ -26,6 +27,7 @@ modules:
       - "Seguros y responsabilidad civil"
   - title: "Montaje FPV paso a paso"
     instructor: "Miguel Sanz"
+    bannerImage: "/campus/novodrone-pilot/miguel-sanz.jpg"
     lessons:
       - "Componentes de un FPV: electrónica y montaje"
       - "Ensamblaje completo de tu drone FPV"
@@ -43,6 +45,7 @@ modules:
       - "Vuelo en condiciones exigentes: viento y espacios cerrados"
   - title: "Edición persuasiva para redes sociales"
     instructor: "Iker Luzón"
+    bannerImage: "/campus/novodrone-pilot/iker-luzon.jpg"
     lessons:
       - "Grabación pensada para redes sociales"
       - "Edición de vídeo: ritmo y montaje persuasivo"
