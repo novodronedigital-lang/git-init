@@ -1,4 +1,8 @@
 import { supabase } from "./supabase";
+import { SITE_TARGET, FORMACION_URL } from "../data/site";
+
+const IS_DEV = import.meta.env.DEV;
+const LOGIN_URL = IS_DEV || SITE_TARGET === "formacion" ? "/login" : `${FORMACION_URL}/login`;
 
 export function signUp(email: string, password: string, fullName: string) {
   return supabase.auth.signUp({
@@ -23,11 +27,11 @@ export async function getSession() {
   return session;
 }
 
-/** Redirects to /login and returns null when there is no active session. */
+/** Redirects to /login (on formacion.droneduca.es, cross-domain if needed) and returns null when logged out. */
 export async function requireSession() {
   const session = await getSession();
   if (!session) {
-    window.location.href = "/login";
+    window.location.href = LOGIN_URL;
     return null;
   }
   return session;
