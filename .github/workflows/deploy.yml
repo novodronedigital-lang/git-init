@@ -99,16 +99,19 @@ jobs:
           local-dir: ./dist/registro/
           server-dir: ./public_html/formacion/registro/
 
+      - name: Stage robots.txt on its own
+        run: |
+          mkdir -p ./dist-formacion-robots
+          cp ./dist/robots.txt ./dist-formacion-robots/robots.txt
+
       - name: Deploy robots.txt (formación)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
+          local-dir: ./dist-formacion-robots/
           server-dir: ./public_html/formacion/
-          include: |
-            robots.txt
 
       - name: Deploy admin panel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
