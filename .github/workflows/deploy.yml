@@ -121,3 +121,51 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/admin/
           server-dir: ./public_html/admin/
+
+      - name: Deploy robots.txt (admin, disallow all)
+        run: |
+          mkdir -p ./dist-admin-robots
+          printf "User-agent: *\nDisallow: /\n" > ./dist-admin-robots/robots.txt
+
+      - name: Deploy robots.txt (admin)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist-admin-robots/
+          server-dir: ./public_html/admin/
+
+      # ================================================================
+      # _astro (CSS/JS compilados), brand/, favicon, etc. — cursos,
+      # campus, login, registro y admin comparten estos archivos, así
+      # que se copian también a formacion/ y a admin/ (en la carpeta de
+      # marketing ya se han subido en el primer build de más arriba).
+      # ================================================================
+      - name: Stage shared static assets
+        run: |
+          mkdir -p ./dist-shared-assets
+          cp -r ./dist/_astro ./dist-shared-assets/_astro
+          cp -r ./dist/brand ./dist-shared-assets/brand
+          cp ./dist/favicon.png ./dist-shared-assets/favicon.png
+          cp ./dist/favicon.svg ./dist-shared-assets/favicon.svg
+          cp ./dist/apple-touch-icon.png ./dist-shared-assets/apple-touch-icon.png
+          cp ./dist/og-image.svg ./dist-shared-assets/og-image.svg
+
+      - name: Deploy shared assets (formación)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist-shared-assets/
+          server-dir: ./public_html/formacion/
+
+      - name: Deploy shared assets (admin)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist-shared-assets/
+          server-dir: ./public_html/admin/
