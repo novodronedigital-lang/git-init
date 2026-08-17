@@ -31,9 +31,14 @@ const courses = defineCollection({
     includes: z.array(z.string()).optional(),
     forum: z.boolean().default(false),
     calendar: z.boolean().default(false),
+    // "webinar": campus con Inicio/Clases en banner/Acerca de propios (cursos de pago). "classic": lista plana actual.
+    campusDesign: z.enum(["classic", "webinar"]).default("classic"),
+    whatsapp: z.boolean().default(false),
+    whatsappUrl: z.string().optional(),
     modules: z.array(
       z.object({
         title: z.string(),
+        instructor: z.string().optional(),
         lessons: z.array(z.string()),
       }),
     ),

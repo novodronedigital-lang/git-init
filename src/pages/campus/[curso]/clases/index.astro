@@ -1,0 +1,124 @@
+---
+import CampusShell from "../../../../components/campus/CampusShell.astro";
+import Icon from "../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+import { getContactoHref } from "../../../../data/site";
+import { flattenLessons, initials, MODULE_COLORS } from "../../../../lib/courseLessons";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses
+    .filter((course) => course.data.campusDesign === "webinar")
+    .map((course) => ({ params: { curso: course.id }, props: { course } }));
+}
+
+const { course } = Astro.props;
+const contactoHref = getContactoHref();
+const flat = flattenLessons(course);
+---
+
+<CampusShell course={course} active="clases" title={`Clases · ${course.data.title}`}>
+  <p id="loading-state" class="text-sm text-navy-500">Comprobando tu acceso...</p>
+
+  <div id="no-access-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+    Todavía no tienes acceso a este curso.
+    <a href={contactoHref} class="font-semibold text-sky-700 hover:underline">Escríbenos</a>
+    para solicitarlo.
+  </div>
+
+  <div id="course-content" class="hidden">
+    <h1 class="font-display text-2xl font-extrabold text-navy-900 sm:text-[26px]">Clases</h1>
+    <p class="mt-1 text-[13.5px] text-navy-500">{course.data.modules.length} módulos · {flat.length} lecciones</p>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {course.data.modules.map((mod, mi) => {
+        const teacher = mod.instructor ?? "Equipo DronEduca";
+        const color = MODULE_COLORS[mi % MODULE_COLORS.length];
+        return (
+          <a
+            href={`/campus/${course.id}/clases/${mi + 1}`}
+            class="group overflow-hidden rounded-[18px] border border-navy-100 bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-navy-900/10"
+          >
+            <div
+              class="relative flex aspect-video flex-col justify-end overflow-hidden p-3.5 text-white"
+              style={`background:linear-gradient(150deg, ${color}, #0a1120)`}
+            >
+              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-white/55">
+                <Icon name="camera" class="size-5" />
+                <span class="text-[11px]">Foto de {teacher}</span>
+              </div>
+              <span class="relative mb-auto self-start rounded-full bg-white/15 px-2.5 py-1 text-[10.5px] font-bold backdrop-blur-sm">
+                Con {teacher}
+              </span>
+              <span class="relative font-display text-[17px] font-extrabold leading-tight [text-shadow:0_2px_10px_rgb(0_0_0_/_0.35)]">
+                {mod.title}
+              </span>
+            </div>
+            <div class="p-4">
+              <p class="text-[11.5px] font-bold text-sky-700">Módulo {mi + 1}</p>
+              <p data-module-count={mi} class="mt-0.5 text-[11.5px] text-navy-500">{mod.lessons.length} lecciones</p>
+              <div class="mt-2.5 h-1.5 overflow-hidden rounded-full bg-navy-100">
+                <div data-module-bar={mi} class="h-full w-0 rounded-full bg-gradient-to-r from-sky-500 to-sky-700"></div>
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</CampusShell>
+
+<script define:vars={{ flat }}>
+  window.__campusFlat = flat;
+</script>
+
+<script>
+  import { requireCourseAccess } from "../../../../lib/campusAccess";
+  import { supabase } from "../../../../lib/supabase";
+
+  const courseSlug = window.location.pathname.split("/")[2];
+  const access = await requireCourseAccess(courseSlug);
+  if (access) {
+    const { session, hasAccess } = access;
+    document.getElementById("loading-state")?.classList.add("hidden");
+
+    if (!hasAccess) {
+      document.getElementById("no-access-state")?.classList.remove("hidden");
+    } else {
+      document.getElementById("course-content")?.classList.remove("hidden");
+
+      const flat = (window as unknown as { __campusFlat: { number: number; moduleIndex: number }[] }).__campusFlat;
+
+      const { data: lessons } = await supabase.from("lessons").select("id, lesson_order").eq("course_slug", courseSlug);
+      const lessonIds = (lessons ?? []).map((l) => l.id);
+      const { data: progressRows } = lessonIds.length
+        ? await supabase.from("lesson_progress").select("lesson_id").eq("user_id", session.user.id).in("lesson_id", lessonIds)
+        : { data: [] };
+
+      const completedIds = new Set((progressRows ?? []).map((p) => p.lesson_id));
+      const completedOrders = new Set(
+        (lessons ?? []).filter((l) => completedIds.has(l.id)).map((l) => l.lesson_order),
+      );
+
+      const doneByModule = new Map<number, number>();
+      for (const l of flat) {
+        if (completedOrders.has(l.number)) {
+          doneByModule.set(l.moduleIndex, (doneByModule.get(l.moduleIndex) ?? 0) + 1);
+        }
+      }
+      const totalByModule = new Map<number, number>();
+      for (const l of flat) {
+        totalByModule.set(l.moduleIndex, (totalByModule.get(l.moduleIndex) ?? 0) + 1);
+      }
+
+      totalByModule.forEach((total, mi) => {
+        const done = doneByModule.get(mi) ?? 0;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        const countEl = document.querySelector(`[data-module-count="${mi}"]`);
+        if (countEl) countEl.textContent = `${done} / ${total} lecciones`;
+        const barEl = document.querySelector<HTMLElement>(`[data-module-bar="${mi}"]`);
+        if (barEl) barEl.style.width = `${pct}%`;
+      });
+    }
+  }
+</script>

@@ -1,0 +1,149 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Icon from "../Icon.astro";
+import { SITE } from "../../data/site";
+
+interface Props {
+  course: CollectionEntry<"courses">;
+  active: "inicio" | "clases" | "calendario" | "acerca";
+  title: string;
+  description?: string;
+}
+
+const { course, active, title, description = course.data.description } = Astro.props;
+const pageTitle = `${title} | ${SITE.name} Campus`;
+
+const base = `/campus/${course.id}`;
+const tabs = [
+  { key: "inicio", label: "Inicio", href: base },
+  { key: "clases", label: "Clases", href: `${base}/clases` },
+  ...(course.data.calendar ? [{ key: "calendario", label: "Calendario", href: `${base}/calendario` }] : []),
+  { key: "acerca", label: "Acerca de", href: `${base}/acerca` },
+] as const;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="robots" content="noindex" />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="flex min-h-screen flex-col bg-navy-50 antialiased">
+    <div
+      id="maintenance-overlay"
+      class="fixed inset-0 z-[999] hidden flex-col items-center justify-center gap-4 bg-white px-6 text-center"
+    >
+      <img src="/brand/logo-lockup-on-light.png" alt={SITE.name} class="h-10 w-auto" />
+      <h1 class="font-display text-2xl font-extrabold text-navy-900">Estamos actualizando la web</h1>
+      <p class="max-w-md text-navy-600">Volvemos enseguida. Gracias por la paciencia.</p>
+    </div>
+
+    <header class="bg-navy-950 text-white">
+      <div class="container-page flex items-center gap-4 py-3.5">
+        <a href="/campus" class="flex shrink-0 items-center gap-2.5">
+          <span class="grid size-8 place-items-center rounded-[10px] bg-gradient-to-br from-sky-500 to-sky-700">
+            <Icon name="drone" class="size-4.5 text-white" />
+          </span>
+          <span class="font-display text-[15px] font-extrabold tracking-tight">
+            DronEduca <span class="text-sky-300">Campus</span>
+          </span>
+        </a>
+
+        <p class="min-w-0 flex-1 truncate text-[13px] text-navy-300">
+          <a href="/campus" class="hover:text-white">Mi campus</a>
+          <span class="mx-1.5">/</span>
+          <strong class="font-bold text-white">{course.data.title}</strong>
+        </p>
+
+        <div class="flex shrink-0 items-center gap-2.5">
+          <span id="campus-user-name" class="hidden text-[13px] font-semibold text-navy-100 sm:inline"></span>
+          <button
+            id="campus-logout"
+            type="button"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+            class="grid size-8 place-items-center rounded-full bg-amber-500 font-display text-xs font-bold text-white transition-colors hover:bg-navy-800"
+          >
+            <span id="campus-user-initials"></span>
+          </button>
+        </div>
+      </div>
+
+      <nav class="border-t border-navy-800">
+        <div class="container-page flex gap-1 overflow-x-auto px-2 sm:px-5">
+          {tabs.map((tab) => (
+            <a
+              href={tab.href}
+              aria-current={active === tab.key ? "page" : undefined}
+              class:list={[
+                "shrink-0 whitespace-nowrap rounded-t-lg px-4 py-2.5 text-[13.5px] font-bold transition-colors",
+                active === tab.key ? "bg-navy-50 text-navy-900" : "text-navy-300 hover:text-white",
+              ]}
+            >
+              {tab.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </header>
+
+    <main class="flex-1 bg-navy-50">
+      <div class="container-page py-7 sm:py-9">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="border-t border-navy-100 bg-white py-6">
+      <div class="container-page flex flex-col items-center justify-between gap-2 text-xs text-navy-400 sm:flex-row">
+        <p>© {new Date().getFullYear()} {SITE.name}</p>
+        <a href="/campus" class="font-semibold text-sky-700 hover:underline">← Volver a Mi campus</a>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<script>
+  import { applyMaintenanceGate } from "../../lib/maintenance";
+  import { getSession, signOut } from "../../lib/auth";
+
+  applyMaintenanceGate();
+
+  const session = await getSession();
+  if (session) {
+    const fullName = (session.user.user_metadata?.full_name as string | undefined)?.trim();
+    const displayName = fullName || session.user.email?.split("@")[0] || "Alumno";
+    const initials = displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join("");
+
+    const nameEl = document.getElementById("campus-user-name");
+    const initialsEl = document.getElementById("campus-user-initials");
+    if (nameEl) {
+      nameEl.textContent = displayName;
+      nameEl.classList.remove("hidden");
+    }
+    if (initialsEl) initialsEl.textContent = initials || "?";
+  }
+
+  document.getElementById("campus-logout")?.addEventListener("click", async () => {
+    await signOut();
+    window.location.href = "/";
+  });
+</script>

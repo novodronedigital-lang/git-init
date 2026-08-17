@@ -1,0 +1,105 @@
+---
+import CampusShell from "../../../../components/campus/CampusShell.astro";
+import Icon from "../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+import { getContactoHref } from "../../../../data/site";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses
+    .filter((course) => course.data.campusDesign === "webinar")
+    .map((course) => ({ params: { curso: course.id }, props: { course } }));
+}
+
+const { course } = Astro.props;
+const contactoHref = getContactoHref();
+
+const totalLessons = course.data.modules.reduce((sum, m) => sum + m.lessons.length, 0);
+const teachers = [...new Set(course.data.modules.map((m) => m.instructor ?? "Equipo DronEduca"))].map((teacher) => ({
+  name: teacher,
+  module: course.data.modules.find((m) => (m.instructor ?? "Equipo DronEduca") === teacher)!.title,
+}));
+---
+
+<CampusShell course={course} active="acerca" title={`Acerca de · ${course.data.title}`}>
+  <p id="loading-state" class="text-sm text-navy-500">Comprobando tu acceso...</p>
+
+  <div id="no-access-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+    Todavía no tienes acceso a este curso.
+    <a href={contactoHref} class="font-semibold text-sky-700 hover:underline">Escríbenos</a>
+    para solicitarlo.
+  </div>
+
+  <div id="course-content" class="hidden">
+    <div class="relative flex aspect-[21/8] items-center justify-center overflow-hidden rounded-[18px] bg-gradient-to-br from-navy-950 to-sky-900 text-white">
+      <span class="absolute left-4 top-3.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold backdrop-blur-sm">
+        Vídeo de presentación
+      </span>
+      <span class="grid size-[62px] place-items-center rounded-full border-[1.5px] border-white/35 bg-white/15">
+        <Icon name="play" class="size-6 translate-x-0.5" />
+      </span>
+      <span class="absolute bottom-3.5 left-4 right-4 text-xs text-navy-200">VSL del curso — pendiente de grabar</span>
+    </div>
+
+    <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="rounded-2xl border border-navy-100 bg-white p-4">
+        <p class="font-display text-xl font-extrabold text-navy-900">{course.data.modules.length}</p>
+        <p class="text-[11px] text-navy-500">Módulos</p>
+      </div>
+      <div class="rounded-2xl border border-navy-100 bg-white p-4">
+        <p class="font-display text-xl font-extrabold text-navy-900">{totalLessons}</p>
+        <p class="text-[11px] text-navy-500">Lecciones</p>
+      </div>
+      <div class="rounded-2xl border border-navy-100 bg-white p-4">
+        <p class="font-display text-xl font-extrabold text-navy-900">{course.data.level}</p>
+        <p class="text-[11px] text-navy-500">Nivel</p>
+      </div>
+      <div class="rounded-2xl border border-navy-100 bg-white p-4">
+        <p class="font-display text-xl font-extrabold text-navy-900">{course.data.price}</p>
+        <p class="text-[11px] text-navy-500">{course.data.category}</p>
+      </div>
+    </div>
+
+    <p class="mt-6 max-w-[70ch] text-sm leading-relaxed text-navy-700">{course.data.description}</p>
+
+    {course.data.includes && course.data.includes.length > 0 && (
+      <ul class="mt-4 flex flex-col gap-1.5">
+        {course.data.includes.map((item) => (
+          <li class="flex items-center gap-2 text-[13px] text-navy-700">
+            <Icon name="check" class="size-4 shrink-0 text-sky-600" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <h2 class="mb-3 mt-8 font-display text-base font-extrabold text-navy-900">Tu equipo docente</h2>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {teachers.map((teacher) => (
+        <div class="rounded-2xl border border-navy-100 bg-white p-4 text-center">
+          <span class="mx-auto mb-2.5 grid size-14 place-items-center rounded-full border-[1.5px] border-dashed border-navy-300 text-navy-300">
+            <Icon name="camera" class="size-4.5" />
+          </span>
+          <p class="font-display text-[13px] font-bold text-navy-900">{teacher.name}</p>
+          <p class="mt-0.5 text-[11px] font-bold text-sky-700">{teacher.module}</p>
+          <p class="mt-1.5 text-[10px] text-navy-300">Foto próximamente</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</CampusShell>
+
+<script>
+  import { requireCourseAccess } from "../../../../lib/campusAccess";
+
+  const courseSlug = window.location.pathname.split("/")[2];
+  const access = await requireCourseAccess(courseSlug);
+  if (access) {
+    document.getElementById("loading-state")?.classList.add("hidden");
+    if (!access.hasAccess) {
+      document.getElementById("no-access-state")?.classList.remove("hidden");
+    } else {
+      document.getElementById("course-content")?.classList.remove("hidden");
+    }
+  }
+</script>

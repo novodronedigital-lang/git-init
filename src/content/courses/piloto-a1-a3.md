@@ -6,17 +6,22 @@ level: "Intermedio"
 category: "Certificación"
 price: "99,99€"
 brand: "droneduca"
+campusDesign: "webinar"
+whatsapp: false
 modules:
   - title: "Normativa y examen A1/A3"
+    instructor: "Equipo DronEduca"
     lessons:
       - "La normativa europea de drones, explicada fácil"
       - "Categoría abierta: subcategorías A1, A2 y A3"
       - "Preparación para el examen oficial de AESA"
   - title: "Operativa de vuelo"
+    instructor: "Equipo DronEduca"
     lessons:
       - "Planificación de un vuelo seguro"
       - "Maniobras y control avanzado"
   - title: "Primeras grabaciones"
+    instructor: "Equipo DronEduca"
     lessons:
       - "Ajustes básicos de cámara"
       - "Encuadre y primeros planos aéreos"

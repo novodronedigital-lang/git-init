@@ -8,28 +8,47 @@ price: "1.697€"
 brand: "novodrone"
 forum: true
 calendar: true
+campusDesign: "webinar"
+whatsapp: true
 includes:
   - "1 drone FPV"
   - "2 drones de iniciación: S16P y H36"
   - "Acceso a los 4 módulos completos"
 modules:
   - title: "Fundamentos y normativa"
+    instructor: "Jorge Legua"
     lessons:
       - "Teoría completa del vuelo con drones"
       - "Normativa europea y categorías de vuelo"
+      - "Espacio aéreo y zonas de vuelo restringidas"
+      - "Meteorología básica para pilotos"
+      - "Mantenimiento y revisión pre-vuelo"
+      - "Seguros y responsabilidad civil"
   - title: "Montaje FPV paso a paso"
+    instructor: "Miguel Sanz"
     lessons:
       - "Componentes de un FPV: electrónica y montaje"
       - "Ensamblaje completo de tu drone FPV"
       - "Puesta a punto y primeras pruebas"
+      - "Soldadura y cableado sin errores"
+      - "Configuración del controlador de vuelo"
+      - "Diagnóstico y solución de averías comunes"
   - title: "Pilotaje avanzado"
+    instructor: "Lucas Ferrer"
     lessons:
       - "Vuelo FPV: de cero a control total"
       - "Maniobras avanzadas y circuitos"
+      - "Vuelo en modo acrobático: control total de la actitud"
+      - "Freestyle: trucos y estilo propio"
+      - "Vuelo en condiciones exigentes: viento y espacios cerrados"
   - title: "Edición persuasiva para redes sociales"
+    instructor: "Iker Luzón"
     lessons:
       - "Grabación pensada para redes sociales"
       - "Edición de vídeo: ritmo y montaje persuasivo"
+      - "Color grading y corrección de color"
+      - "Música, transiciones y efectos que enganchan"
+      - "Estrategia de contenido: qué publicar y cuándo"
       - "Publicar y crecer como creador de contenido con drones"
 ---
 

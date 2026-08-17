@@ -1,21 +1,16 @@
 ---
 import Layout from "../../../../layouts/Layout.astro";
+import CampusShell from "../../../../components/campus/CampusShell.astro";
 import Icon from "../../../../components/Icon.astro";
 import { getCollection } from "astro:content";
+import { flattenLessons, initials, MODULE_COLORS } from "../../../../lib/courseLessons";
 
 export async function getStaticPaths() {
   const courses = await getCollection("courses");
   return courses.flatMap((course) => {
-    let n = 0;
-    const flatLessons = course.data.modules.flatMap((mod) =>
-      mod.lessons.map((title) => {
-        n += 1;
-        return { number: n, title, moduleTitle: mod.title };
-      }),
-    );
-    const total = flatLessons.length;
-
-    return flatLessons.map((lesson) => ({
+    const flat = flattenLessons(course);
+    const total = flat.length;
+    return flat.map((lesson) => ({
       params: { curso: course.id, numero: String(lesson.number) },
       props: { course, lesson, total },
     }));
@@ -23,65 +18,133 @@ export async function getStaticPaths() {
 }
 
 const { course, lesson, total } = Astro.props;
+const isWebinar = course.data.campusDesign === "webinar";
 const prevHref = lesson.number > 1 ? `/campus/${course.id}/leccion/${lesson.number - 1}` : null;
 const nextHref =
   lesson.number < total ? `/campus/${course.id}/leccion/${lesson.number + 1}` : `/campus/${course.id}/examen`;
 const nextLabel = lesson.number < total ? "Siguiente lección" : "Ir al examen final";
+const teacher = lesson.instructor ?? "Equipo DronEduca";
+const color = MODULE_COLORS[lesson.moduleIndex % MODULE_COLORS.length];
 ---
 
-<Layout title={`${lesson.title} · ${course.data.title}`} description={course.data.description}>
-  <section class="bg-sky-50/60 py-10 sm:py-12">
-    <div class="container-page">
-      <a href={`/campus/${course.id}`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
-        ← {course.data.title}
-      </a>
-      <span class="mt-4 block text-xs font-semibold uppercase tracking-wide text-navy-400">{lesson.moduleTitle}</span>
-      <h1 class="mt-1 font-display text-2xl font-extrabold leading-tight text-navy-900 sm:text-3xl">{lesson.title}</h1>
-    </div>
-  </section>
+{isWebinar ? (
+  <CampusShell course={course} active="clases" title={`${lesson.title} · ${course.data.title}`}>
+    <a href={`/campus/${course.id}/clases/${lesson.moduleIndex + 1}`} class="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-sky-700 hover:underline">
+      ← {lesson.moduleTitle}
+    </a>
 
-  <section class="py-12 sm:py-16">
-    <div class="container-page max-w-3xl">
-      <div id="lesson-loading" class="text-sm text-navy-500">Cargando lección...</div>
+    <div id="lesson-loading" class="mt-6 text-sm text-navy-500">Cargando lección...</div>
 
-      <div id="lesson-content" class="hidden">
-        <div id="video-wrapper" class="hidden aspect-video overflow-hidden rounded-3xl bg-navy-950">
-          <iframe
-            id="video-frame"
-            class="size-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+    <div id="lesson-content" class="hidden mt-6 max-w-3xl">
+      <div id="video-wrapper" class="hidden relative aspect-video overflow-hidden rounded-[18px] bg-gradient-to-br from-navy-950 to-navy-800">
+        <iframe
+          id="video-frame"
+          class="size-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <div class="mt-4 flex items-center gap-2">
+        <span class="grid size-6 shrink-0 place-items-center rounded-[7px] font-display text-[10px] font-bold text-white" style={`background:${color}`}>
+          {initials(teacher)}
+        </span>
+        <span class="text-xs font-semibold text-navy-500">Con {teacher} · {lesson.moduleTitle}</span>
+      </div>
+      <h1 class="mt-1.5 font-display text-xl font-extrabold leading-tight text-navy-900 sm:text-2xl">{lesson.title}</h1>
+
+      <div class="mt-4">
+        <div class="h-[7px] overflow-hidden rounded-full bg-navy-100">
+          <div id="course-progress-bar" class="h-full w-0 rounded-full bg-gradient-to-r from-sky-500 to-sky-700"></div>
         </div>
+        <div class="mt-1.5 flex justify-between text-[11px] text-navy-500">
+          <span>Progreso del curso</span>
+          <span id="course-progress-label"></span>
+        </div>
+      </div>
 
-        <div id="lesson-body" class="prose-content mt-8 whitespace-pre-line"></div>
+      <div id="lesson-body" class="prose-content mt-5 whitespace-pre-line text-[13.5px]"></div>
 
+      <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-navy-100 pt-5">
         <button
           id="complete-button"
           type="button"
-          class="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Icon name="check" class="size-4" />
           <span id="complete-button-label">Marcar como completada</span>
         </button>
-      </div>
-
-      <p id="no-content" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
-        Esta lección todavía no tiene contenido disponible. Vuelve pronto.
-      </p>
-
-      <div class="mt-10 flex items-center justify-between border-t border-navy-100 pt-6">
-        {prevHref ? (
-          <a href={prevHref} class="text-sm font-semibold text-sky-700 hover:underline">← Lección anterior</a>
-        ) : <span></span>}
-        <a href={nextHref} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700 hover:underline">
-          {nextLabel}
-          <Icon name="arrow-right" class="size-4" />
-        </a>
+        <div class="flex items-center gap-4 text-[12.5px] font-bold">
+          {prevHref ? (
+            <a href={prevHref} class="text-sky-700 hover:underline">← Anterior</a>
+          ) : <span></span>}
+          <a href={nextHref} class="inline-flex items-center gap-1.5 text-sky-700 hover:underline">
+            {nextLabel}
+            <Icon name="arrow-right" class="size-4" />
+          </a>
+        </div>
       </div>
     </div>
-  </section>
-</Layout>
+
+    <p id="no-content" class="hidden mt-6 max-w-3xl rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+      Esta lección todavía no tiene contenido disponible. Vuelve pronto.
+    </p>
+  </CampusShell>
+) : (
+  <Layout title={`${lesson.title} · ${course.data.title}`} description={course.data.description}>
+    <section class="bg-sky-50/60 py-10 sm:py-12">
+      <div class="container-page">
+        <a href={`/campus/${course.id}`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
+          ← {course.data.title}
+        </a>
+        <span class="mt-4 block text-xs font-semibold uppercase tracking-wide text-navy-400">{lesson.moduleTitle}</span>
+        <h1 class="mt-1 font-display text-2xl font-extrabold leading-tight text-navy-900 sm:text-3xl">{lesson.title}</h1>
+      </div>
+    </section>
+
+    <section class="py-12 sm:py-16">
+      <div class="container-page max-w-3xl">
+        <div id="lesson-loading" class="text-sm text-navy-500">Cargando lección...</div>
+
+        <div id="lesson-content" class="hidden">
+          <div id="video-wrapper" class="hidden aspect-video overflow-hidden rounded-3xl bg-navy-950">
+            <iframe
+              id="video-frame"
+              class="size-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+
+          <div id="lesson-body" class="prose-content mt-8 whitespace-pre-line"></div>
+
+          <button
+            id="complete-button"
+            type="button"
+            class="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Icon name="check" class="size-4" />
+            <span id="complete-button-label">Marcar como completada</span>
+          </button>
+        </div>
+
+        <p id="no-content" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+          Esta lección todavía no tiene contenido disponible. Vuelve pronto.
+        </p>
+
+        <div class="mt-10 flex items-center justify-between border-t border-navy-100 pt-6">
+          {prevHref ? (
+            <a href={prevHref} class="text-sm font-semibold text-sky-700 hover:underline">← Lección anterior</a>
+          ) : <span></span>}
+          <a href={nextHref} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700 hover:underline">
+            {nextLabel}
+            <Icon name="arrow-right" class="size-4" />
+          </a>
+        </div>
+      </div>
+    </section>
+  </Layout>
+)}
 
 <script>
   import { requireSession } from "../../../../lib/auth";
@@ -156,6 +219,23 @@ const nextLabel = lesson.number < total ? "Siguiente lección" : "Ir al examen f
           completeButton.disabled = false;
         }
       });
+    }
+
+    // Barra de progreso del curso (solo existe en la plantilla webinar).
+    const progressBar = document.getElementById("course-progress-bar");
+    const progressLabel = document.getElementById("course-progress-label");
+    if (progressBar && progressLabel) {
+      const { data: allLessons } = await supabase.from("lessons").select("id, lesson_order").eq("course_slug", courseSlug);
+      const lessonIds = (allLessons ?? []).map((l) => l.id);
+      const { data: progressRows } = lessonIds.length
+        ? await supabase.from("lesson_progress").select("lesson_id").eq("user_id", session.user.id).in("lesson_id", lessonIds)
+        : { data: [] };
+      const completedIds = new Set((progressRows ?? []).map((p) => p.lesson_id));
+      const doneCount = (allLessons ?? []).filter((l) => completedIds.has(l.id)).length;
+      const totalCount = (allLessons ?? []).length;
+      const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+      (progressBar as HTMLElement).style.width = `${pct}%`;
+      progressLabel.textContent = `${doneCount} / ${totalCount} · ${pct}%`;
     }
   }
 </script>

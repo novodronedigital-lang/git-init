@@ -1,0 +1,113 @@
+---
+import CampusShell from "../../../../components/campus/CampusShell.astro";
+import Icon from "../../../../components/Icon.astro";
+import { getCollection } from "astro:content";
+import { getContactoHref } from "../../../../data/site";
+import { moduleLessonRange, initials, MODULE_COLORS } from "../../../../lib/courseLessons";
+
+export async function getStaticPaths() {
+  const courses = await getCollection("courses");
+  return courses
+    .filter((course) => course.data.campusDesign === "webinar")
+    .flatMap((course) =>
+      course.data.modules.map((mod, mi) => ({
+        params: { curso: course.id, modulo: String(mi + 1) },
+        props: { course, moduleIndex: mi },
+      })),
+    );
+}
+
+const { course, moduleIndex } = Astro.props;
+const mod = course.data.modules[moduleIndex];
+const teacher = mod.instructor ?? "Equipo DronEduca";
+const color = MODULE_COLORS[moduleIndex % MODULE_COLORS.length];
+const { start } = moduleLessonRange(course, moduleIndex);
+const contactoHref = getContactoHref();
+---
+
+<CampusShell course={course} active="clases" title={`${mod.title} · ${course.data.title}`}>
+  <p id="loading-state" class="text-sm text-navy-500">Comprobando tu acceso...</p>
+
+  <div id="no-access-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+    Todavía no tienes acceso a este curso.
+    <a href={contactoHref} class="font-semibold text-sky-700 hover:underline">Escríbenos</a>
+    para solicitarlo.
+  </div>
+
+  <div id="course-content" class="hidden">
+    <a href={`/campus/${course.id}/clases`} class="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-sky-700 hover:underline">
+      ← Todos los módulos
+    </a>
+
+    <div class="mt-4 flex items-center gap-3">
+      <span
+        class="grid size-9 shrink-0 place-items-center rounded-[10px] font-display text-[13px] font-bold text-white"
+        style={`background:${color}`}
+      >
+        {initials(teacher)}
+      </span>
+      <div>
+        <h1 class="font-display text-lg font-extrabold text-navy-900">{mod.title}</h1>
+        <p class="text-xs font-bold text-sky-700">Con {teacher}</p>
+      </div>
+    </div>
+
+    <div class="mt-5 overflow-hidden rounded-2xl border border-navy-100 bg-white">
+      {mod.lessons.map((title, li) => {
+        const number = start + li;
+        return (
+          <a
+            href={`/campus/${course.id}/leccion/${number}`}
+            data-lesson-number={number}
+            class="flex items-center gap-3 border-t border-navy-50 px-4 py-3 text-[12.5px] text-navy-700 transition-colors first:border-t-0 hover:bg-sky-50"
+          >
+            <span data-lesson-check class="grid size-5 shrink-0 place-items-center rounded-full bg-navy-100 text-navy-400">
+              <Icon name="play" class="size-2.5" />
+            </span>
+            <span class="flex-1 font-semibold">{title}</span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</CampusShell>
+
+<script>
+  import { requireCourseAccess } from "../../../../lib/campusAccess";
+  import { supabase } from "../../../../lib/supabase";
+
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const courseSlug = parts[1];
+
+  const access = await requireCourseAccess(courseSlug);
+  if (access) {
+    const { session, hasAccess } = access;
+    document.getElementById("loading-state")?.classList.add("hidden");
+
+    if (!hasAccess) {
+      document.getElementById("no-access-state")?.classList.remove("hidden");
+    } else {
+      document.getElementById("course-content")?.classList.remove("hidden");
+
+      const { data: lessons } = await supabase.from("lessons").select("id, lesson_order").eq("course_slug", courseSlug);
+      const lessonIds = (lessons ?? []).map((l) => l.id);
+      const { data: progressRows } = lessonIds.length
+        ? await supabase.from("lesson_progress").select("lesson_id").eq("user_id", session.user.id).in("lesson_id", lessonIds)
+        : { data: [] };
+
+      const completedIds = new Set((progressRows ?? []).map((p) => p.lesson_id));
+      const completedOrders = new Set(
+        (lessons ?? []).filter((l) => completedIds.has(l.id)).map((l) => l.lesson_order),
+      );
+
+      document.querySelectorAll<HTMLElement>("[data-lesson-number]").forEach((el) => {
+        const number = Number(el.dataset.lessonNumber);
+        if (completedOrders.has(number)) {
+          const check = el.querySelector<HTMLElement>("[data-lesson-check]");
+          check?.classList.remove("bg-navy-100", "text-navy-400");
+          check?.classList.add("bg-sky-600", "text-white");
+        }
+      });
+    }
+  }
+</script>
