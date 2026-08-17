@@ -54,6 +54,12 @@ jobs:
       # admin.droneduca.es (public_html/admin) — panel de administración.
       # Ambos subdominios son subcarpetas del mismo public_html, así que
       # usan las mismas credenciales FTP que la web principal.
+      #
+      # IMPORTANTE: cada subdominio se sube en UN SOLO paso de FTP (todo
+      # lo que necesita, ya combinado en una carpeta local antes). Si dos
+      # pasos de FTP-Deploy-Action apuntan a la misma server-dir por
+      # separado, el segundo borra lo que subió el primero (el estado de
+      # sincronización de la acción no sabe que ese archivo "es suyo").
       # ================================================================
       - name: Build app site (formacion.droneduca.es)
         run: npm run build
@@ -63,109 +69,47 @@ jobs:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
 
-      - name: Deploy cursos
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/cursos/
-          server-dir: ./public_html/formacion/cursos/
-
-      - name: Deploy campus
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/campus/
-          server-dir: ./public_html/formacion/campus/
-
-      - name: Deploy login
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/login/
-          server-dir: ./public_html/formacion/login/
-
-      - name: Deploy registro
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/registro/
-          server-dir: ./public_html/formacion/registro/
-
-      - name: Stage robots.txt on its own
+      - name: Stage formacion.droneduca.es
         run: |
-          mkdir -p ./dist-formacion-robots
-          cp ./dist/robots.txt ./dist-formacion-robots/robots.txt
+          mkdir -p ./dist-formacion
+          cp -r ./dist/cursos ./dist-formacion/cursos
+          cp -r ./dist/campus ./dist-formacion/campus
+          cp -r ./dist/login ./dist-formacion/login
+          cp -r ./dist/registro ./dist-formacion/registro
+          cp -r ./dist/_astro ./dist-formacion/_astro
+          cp -r ./dist/brand ./dist-formacion/brand
+          cp ./dist/robots.txt ./dist-formacion/robots.txt
+          cp ./dist/favicon.png ./dist-formacion/favicon.png
+          cp ./dist/favicon.svg ./dist-formacion/favicon.svg
+          cp ./dist/apple-touch-icon.png ./dist-formacion/apple-touch-icon.png
+          cp ./dist/og-image.svg ./dist-formacion/og-image.svg
 
-      - name: Deploy robots.txt (formación)
+      - name: Deploy formacion.droneduca.es
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist-formacion-robots/
+          local-dir: ./dist-formacion/
           server-dir: ./public_html/formacion/
 
-      - name: Deploy admin panel
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/admin/
-          server-dir: ./public_html/admin/
-
-      - name: Deploy robots.txt (admin, disallow all)
+      - name: Stage admin.droneduca.es
         run: |
-          mkdir -p ./dist-admin-robots
-          printf "User-agent: *\nDisallow: /\n" > ./dist-admin-robots/robots.txt
+          mkdir -p ./dist-admin
+          cp -r ./dist/admin/. ./dist-admin/
+          cp -r ./dist/_astro ./dist-admin/_astro
+          cp -r ./dist/brand ./dist-admin/brand
+          cp ./dist/favicon.png ./dist-admin/favicon.png
+          cp ./dist/favicon.svg ./dist-admin/favicon.svg
+          cp ./dist/apple-touch-icon.png ./dist-admin/apple-touch-icon.png
+          cp ./dist/og-image.svg ./dist-admin/og-image.svg
+          printf "User-agent: *\nDisallow: /\n" > ./dist-admin/robots.txt
 
-      - name: Deploy robots.txt (admin)
+      - name: Deploy admin.droneduca.es
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist-admin-robots/
-          server-dir: ./public_html/admin/
-
-      # ================================================================
-      # _astro (CSS/JS compilados), brand/, favicon, etc. — cursos,
-      # campus, login, registro y admin comparten estos archivos, así
-      # que se copian también a formacion/ y a admin/ (en la carpeta de
-      # marketing ya se han subido en el primer build de más arriba).
-      # ================================================================
-      - name: Stage shared static assets
-        run: |
-          mkdir -p ./dist-shared-assets
-          cp -r ./dist/_astro ./dist-shared-assets/_astro
-          cp -r ./dist/brand ./dist-shared-assets/brand
-          cp ./dist/favicon.png ./dist-shared-assets/favicon.png
-          cp ./dist/favicon.svg ./dist-shared-assets/favicon.svg
-          cp ./dist/apple-touch-icon.png ./dist-shared-assets/apple-touch-icon.png
-          cp ./dist/og-image.svg ./dist-shared-assets/og-image.svg
-
-      - name: Deploy shared assets (formación)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist-shared-assets/
-          server-dir: ./public_html/formacion/
-
-      - name: Deploy shared assets (admin)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist-shared-assets/
+          local-dir: ./dist-admin/
           server-dir: ./public_html/admin/
