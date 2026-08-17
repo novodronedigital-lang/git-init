@@ -16,15 +16,26 @@ const courses = await getCollection("courses");
       <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">
         Panel de administración
       </h1>
-      <button
-        id="publish-button"
-        type="button"
-        class="mt-6 inline-flex items-center gap-2 rounded-full bg-navy-950 px-6 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-navy-800 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <Icon name="check" class="size-4" />
-        Publicar cambios
-      </button>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          id="publish-button"
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full bg-navy-950 px-6 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-navy-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Icon name="check" class="size-4" />
+          Publicar cambios
+        </button>
+        <button
+          id="maintenance-button"
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full border border-navy-200 bg-white px-6 py-3 text-sm font-bold text-navy-700 transition-colors hover:border-red-400 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Icon name="lock" class="size-4" />
+          <span id="maintenance-button-label">Cargando...</span>
+        </button>
+      </div>
       <p id="publish-status" class="mt-3 hidden text-sm text-navy-600"></p>
+      <p id="maintenance-status" class="mt-1 hidden text-sm text-navy-600"></p>
     </div>
   </section>
 
@@ -91,6 +102,7 @@ const courses = await getCollection("courses");
 <script>
   import { requireAdmin } from "../../lib/admin";
   import { supabase } from "../../lib/supabase";
+  import { getMaintenanceMode, setMaintenanceMode } from "../../lib/maintenance";
 
   await requireAdmin();
 
@@ -108,5 +120,38 @@ const courses = await getCollection("courses");
     publishStatus.textContent = error
       ? "No se ha podido lanzar la publicación: " + error.message
       : "¡Publicación lanzada! Revisa la pestaña Actions de GitHub para ver el progreso.";
+  });
+
+  const maintenanceButton = document.getElementById("maintenance-button") as HTMLButtonElement;
+  const maintenanceLabel = document.getElementById("maintenance-button-label")!;
+  const maintenanceStatus = document.getElementById("maintenance-status")!;
+
+  function renderMaintenanceState(enabled: boolean) {
+    maintenanceLabel.textContent = enabled ? "Desactivar modo mantenimiento" : "Activar modo mantenimiento";
+    maintenanceButton.classList.toggle("border-red-300", enabled);
+    maintenanceButton.classList.toggle("text-red-700", enabled);
+    maintenanceStatus.textContent = enabled
+      ? "Activo: nadie fuera del equipo ve la web pública ahora mismo."
+      : "";
+    maintenanceStatus.classList.toggle("hidden", !enabled);
+  }
+
+  let maintenanceEnabled = await getMaintenanceMode();
+  renderMaintenanceState(maintenanceEnabled);
+
+  maintenanceButton.addEventListener("click", async () => {
+    maintenanceButton.disabled = true;
+    const next = !maintenanceEnabled;
+    const { error } = await setMaintenanceMode(next);
+    maintenanceButton.disabled = false;
+
+    if (error) {
+      maintenanceStatus.textContent = "No se ha podido cambiar: " + error.message;
+      maintenanceStatus.classList.remove("hidden");
+      return;
+    }
+
+    maintenanceEnabled = next;
+    renderMaintenanceState(maintenanceEnabled);
   });
 </script>

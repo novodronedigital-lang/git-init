@@ -67,7 +67,8 @@ const { schema } = Astro.props;
 
   const admin = await requireAdmin();
   if (admin) {
-    const key = window.location.pathname.split("/").pop()!;
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    const key = pathParts[pathParts.length - 1];
     const schema = getSchema(key);
 
     const loadingState = document.getElementById("loading-state")!;
