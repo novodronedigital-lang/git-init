@@ -1,0 +1,158 @@
+---
+import Icon from "../Icon.astro";
+import { SITE } from "../../data/site";
+import { adminPath, adminHomePath } from "../../lib/admin";
+import "../../styles/global.css";
+
+interface Props {
+  active?: "dashboard" | "alumnos" | "contenido" | null;
+  title: string;
+  description?: string;
+  /** Breadcrumb shown instead of the tabs, for pages nested under a course (lecciones/examen/calendario). */
+  back?: { href: string; label: string };
+}
+
+const { active = null, title, description = "Panel de administración de DronEduca.", back } = Astro.props;
+const pageTitle = `${title} | ${SITE.name} Admin`;
+
+const tabs = [
+  { key: "dashboard", label: "Dashboard", href: adminHomePath() },
+  { key: "alumnos", label: "Alumnos", href: adminPath("/alumnos") },
+  { key: "contenido", label: "Contenido", href: adminPath("/contenido") },
+] as const;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="robots" content="noindex" />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="flex min-h-screen flex-col bg-navy-50 antialiased">
+    <div
+      id="maintenance-overlay"
+      class="fixed inset-0 z-[999] hidden flex-col items-center justify-center gap-4 bg-white px-6 text-center"
+    >
+      <img src="/brand/logo-lockup-on-light.png" alt={SITE.name} class="h-10 w-auto" />
+      <h1 class="font-display text-2xl font-extrabold text-navy-900">Estamos actualizando la web</h1>
+      <p class="max-w-md text-navy-600">Volvemos enseguida. Gracias por la paciencia.</p>
+    </div>
+
+    <header class="bg-navy-950 text-white">
+      <div class="container-page flex items-center gap-4 py-3.5">
+        <a href={adminHomePath()} class="flex shrink-0 items-center gap-2.5">
+          <span class="grid size-8 place-items-center rounded-[10px] bg-gradient-to-br from-amber-400 to-amber-600">
+            <Icon name="lock" class="size-4 text-white" />
+          </span>
+          <span class="font-display text-[15px] font-extrabold tracking-tight">
+            DronEduca <span class="text-amber-300">Admin</span>
+          </span>
+        </a>
+
+        <div class="min-w-0 flex-1"></div>
+
+        <div class="flex shrink-0 items-center gap-2.5">
+          <a href="/campus" class="hidden text-[12.5px] font-semibold text-navy-300 hover:text-white sm:inline">Ver campus →</a>
+          <span id="admin-user-name" class="hidden text-[13px] font-semibold text-navy-100 sm:inline"></span>
+          <button
+            id="admin-logout"
+            type="button"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+            class="grid size-8 place-items-center rounded-full bg-navy-800 font-display text-xs font-bold text-white transition-colors hover:bg-navy-700"
+          >
+            <span id="admin-user-initials"></span>
+          </button>
+        </div>
+      </div>
+
+      {!back && (
+        <nav class="border-t border-navy-800">
+          <div class="container-page flex gap-1 overflow-x-auto px-2 sm:px-5">
+            {tabs.map((tab) => (
+              <a
+                href={tab.href}
+                aria-current={active === tab.key ? "page" : undefined}
+                class:list={[
+                  "shrink-0 whitespace-nowrap rounded-t-lg px-4 py-2.5 text-[13.5px] font-bold transition-colors",
+                  active === tab.key ? "bg-navy-50 text-navy-900" : "text-navy-300 hover:text-white",
+                ]}
+              >
+                {tab.label}
+              </a>
+            ))}
+          </div>
+        </nav>
+      )}
+      {back && (
+        <div class="border-t border-navy-800">
+          <div class="container-page py-2.5">
+            <a href={back.href} class="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-navy-300 hover:text-white">
+              ← {back.label}
+            </a>
+          </div>
+        </div>
+      )}
+    </header>
+
+    <main class="flex-1 bg-navy-50">
+      <div class="container-page py-7 sm:py-9">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="border-t border-navy-100 bg-white py-6">
+      <div class="container-page flex flex-col items-center justify-between gap-2 text-xs text-navy-400 sm:flex-row">
+        <p>© {new Date().getFullYear()} {SITE.name}</p>
+        <p>Panel privado — no indexado.</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<script>
+  import { applyMaintenanceGate } from "../../lib/maintenance";
+  import { getSession, signOut } from "../../lib/auth";
+
+  applyMaintenanceGate();
+
+  const session = await getSession();
+  if (session) {
+    const fullName = (session.user.user_metadata?.full_name as string | undefined)?.trim();
+    const displayName = fullName || session.user.email?.split("@")[0] || "Admin";
+    const initials = displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join("");
+
+    const nameEl = document.getElementById("admin-user-name");
+    const initialsEl = document.getElementById("admin-user-initials");
+    if (nameEl) {
+      nameEl.textContent = displayName;
+      nameEl.classList.remove("hidden");
+    }
+    if (initialsEl) initialsEl.textContent = initials || "?";
+  }
+
+  document.getElementById("admin-logout")?.addEventListener("click", async () => {
+    await signOut();
+    const isDev = import.meta.env.DEV;
+    window.location.href = isDev ? "/admin/login" : "/login";
+  });
+</script>
