@@ -83,6 +83,7 @@ jobs:
           cp ./dist/favicon.svg ./dist-formacion/favicon.svg
           cp ./dist/apple-touch-icon.png ./dist-formacion/apple-touch-icon.png
           cp ./dist/og-image.svg ./dist-formacion/og-image.svg
+          printf '<!doctype html><meta http-equiv="refresh" content="0; url=/cursos"><a href="/cursos">Ir a los cursos</a>' > ./dist-formacion/index.html
 
       - name: Deploy formacion.droneduca.es
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
