@@ -107,9 +107,26 @@ const courses = await getCollection("courses");
     const { error } = await supabase.functions.invoke("publish");
 
     publishButton.disabled = false;
-    publishStatus.textContent = error
-      ? "No se ha podido lanzar la publicación: " + error.message
-      : "¡Publicación lanzada! Revisa la pestaña Actions de GitHub para ver el progreso.";
+
+    if (!error) {
+      publishStatus.textContent = "¡Publicación lanzada! Revisa la pestaña Actions de GitHub para ver el progreso.";
+      return;
+    }
+
+    // FunctionsHttpError trae la respuesta real de la función en `context` (nuestra función
+    // siempre devuelve un texto explicando qué falló); el resto de errores solo traen `message`.
+    let detail = error.message;
+    const context = (error as { context?: Response }).context;
+    if (context && typeof context.text === "function") {
+      try {
+        const body = await context.text();
+        if (body) detail = body;
+      } catch {
+        // Nos quedamos con error.message si no se puede leer el cuerpo.
+      }
+    }
+
+    publishStatus.textContent = "No se ha podido lanzar la publicación: " + detail;
   });
 
   const maintenanceButton = document.getElementById("maintenance-button") as HTMLButtonElement;
