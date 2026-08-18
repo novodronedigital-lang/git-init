@@ -34,7 +34,7 @@ const courses = await getCollection("courses");
   </section>
 
   <section class="py-20 sm:py-24">
-    <div class="container-page mx-auto flex max-w-4xl flex-col gap-6">
+    <div class="container-page mx-auto flex max-w-6xl flex-col gap-6">
       {courses.map((course) => {
         const isFlagship = course.data.brand === "novodrone";
         const hasCta = Boolean(course.data.ctaHref);
@@ -43,10 +43,16 @@ const courses = await getCollection("courses");
         return (
           <div
             class:list={[
-              "flex flex-col overflow-hidden rounded-[22px] border bg-white shadow-sm transition-all hover:shadow-lg lg:flex-row",
+              "group relative flex flex-col overflow-hidden rounded-[22px] border bg-white shadow-sm transition-all hover:shadow-lg lg:flex-row",
               isFlagship ? "border-2 border-amber-400 shadow-amber-400/10" : "border-navy-100",
             ]}
           >
+            <a
+              href={`/cursos/${course.id}`}
+              class="absolute inset-0 z-0"
+              aria-label={`Ver detalles de ${course.data.title}`}
+            ></a>
+
             <div class="relative aspect-video overflow-hidden bg-navy-950 lg:aspect-auto lg:w-[38%] lg:shrink-0">
               {isFlagship && (
                 <span class="absolute left-3.5 top-3.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
@@ -90,7 +96,7 @@ const courses = await getCollection("courses");
               {course.data.tagline && <p class="mt-1 text-sm font-semibold text-sky-700">{course.data.tagline}</p>}
               <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600">{course.data.description}</p>
 
-              <div class="mt-6 flex flex-wrap items-center gap-3">
+              <div class="relative z-10 mt-6 flex flex-wrap items-center gap-3">
                 {hasCta ? (
                   <a
                     href={course.data.ctaHref}
@@ -111,10 +117,10 @@ const courses = await getCollection("courses");
                     {course.data.ctaLabel ?? "Próximamente"}
                   </span>
                 )}
-                <a href={`/cursos/${course.id}`} class="inline-flex items-center gap-1 text-sm font-bold text-sky-700 hover:underline">
+                <span class="inline-flex items-center gap-1 text-sm font-bold text-sky-700 group-hover:underline">
                   Ver detalles del curso
-                  <Icon name="arrow-right" class="size-3.5" />
-                </a>
+                  <Icon name="arrow-right" class="size-3.5 transition-transform group-hover:translate-x-1" />
+                </span>
               </div>
             </div>
           </div>
