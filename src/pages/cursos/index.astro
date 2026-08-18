@@ -47,7 +47,7 @@ const courses = await getCollection("courses");
               isFlagship ? "border-2 border-amber-400 shadow-amber-400/10" : "border-navy-100",
             ]}
           >
-            <div class="relative lg:w-[38%] lg:shrink-0">
+            <div class="relative aspect-video overflow-hidden bg-navy-950 lg:aspect-auto lg:w-[38%] lg:shrink-0">
               {isFlagship && (
                 <span class="absolute left-3.5 top-3.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
                   <Icon name="spark" class="size-3.5" />
@@ -55,12 +55,10 @@ const courses = await getCollection("courses");
                 </span>
               )}
               {course.data.thumbnail ? (
-                <div class="aspect-video overflow-hidden bg-navy-950 lg:h-full">
-                  <img src={course.data.thumbnail} alt={course.data.title} class="size-full object-cover" />
-                </div>
+                <img src={course.data.thumbnail} alt={course.data.title} class="absolute inset-0 size-full object-cover" />
               ) : (
                 <div
-                  class="flex aspect-video flex-col items-center justify-center gap-2 text-white/60 lg:h-full"
+                  class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/60"
                   style={
                     isFlagship
                       ? "background:linear-gradient(150deg,#103b96,#0a1120)"
