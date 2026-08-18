@@ -1,0 +1,143 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import Icon from "../../../components/Icon.astro";
+---
+
+<AdminShell active="mensajes" title="Mensajes" description="Solicitudes recibidas desde el formulario de contacto.">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="font-display text-2xl font-extrabold text-navy-900 sm:text-[26px]">Mensajes</h1>
+    <p id="message-count" class="text-xs font-semibold text-navy-400"></p>
+  </div>
+  <p class="mt-1 text-[13.5px] text-navy-500">Solicitudes enviadas desde el formulario de /contacto.</p>
+
+  <div class="mt-6 max-w-3xl">
+    <p id="loading-state" class="text-sm text-navy-500">Cargando mensajes...</p>
+    <p id="empty-state" class="hidden rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+      Todavía no ha llegado ningún mensaje.
+    </p>
+    <div id="messages-list" class="hidden space-y-3"></div>
+  </div>
+
+  <template id="message-card-template">
+    <div class="rounded-2xl border border-navy-100 bg-white p-5" data-field="card">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <p class="font-display text-base font-bold text-navy-900" data-field="name"></p>
+            <span data-field="new-badge" class="hidden rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+              Nuevo
+            </span>
+          </div>
+          <p class="text-xs text-navy-500" data-field="meta"></p>
+        </div>
+        <p class="text-xs text-navy-400" data-field="date"></p>
+      </div>
+
+      <p class="mt-3 whitespace-pre-line text-sm text-navy-700" data-field="message"></p>
+
+      <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-navy-50 pt-3">
+        <a data-field="mailto" class="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3.5 py-1.5 text-xs font-bold text-sky-700 hover:bg-sky-100">
+          <Icon name="mail" class="size-3.5" />
+          Responder
+        </a>
+        <button
+          type="button"
+          data-field="toggle-read"
+          class="inline-flex items-center gap-1.5 rounded-full border border-navy-200 px-3.5 py-1.5 text-xs font-bold text-navy-500 hover:border-sky-400 hover:text-sky-700"
+        ></button>
+        <button
+          type="button"
+          data-field="archive"
+          class="inline-flex items-center gap-1.5 rounded-full border border-navy-200 px-3.5 py-1.5 text-xs font-bold text-navy-500 hover:border-red-400 hover:text-red-600"
+        >
+          Archivar
+        </button>
+      </div>
+    </div>
+  </template>
+</AdminShell>
+
+<script>
+  import { requireAdmin } from "../../../lib/admin";
+  import { supabase } from "../../../lib/supabase";
+
+  interface ContactMessage {
+    id: string;
+    created_at: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    entity: string | null;
+    activity: string | null;
+    message: string;
+    status: "new" | "read" | "archived";
+  }
+
+  const admin = await requireAdmin();
+  if (admin) {
+    const loadingState = document.getElementById("loading-state");
+    const emptyState = document.getElementById("empty-state");
+    const list = document.getElementById("messages-list")!;
+    const countEl = document.getElementById("message-count")!;
+    const template = document.getElementById("message-card-template") as HTMLTemplateElement;
+
+    const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+    async function load() {
+      const { data: messages } = await supabase
+        .from("contact_messages")
+        .select("id, created_at, name, email, phone, entity, activity, message, status")
+        .neq("status", "archived")
+        .order("created_at", { ascending: false });
+
+      loadingState?.classList.add("hidden");
+      list.innerHTML = "";
+
+      if (!messages || messages.length === 0) {
+        emptyState?.classList.remove("hidden");
+        list.classList.add("hidden");
+        countEl.textContent = "";
+        return;
+      }
+
+      emptyState?.classList.add("hidden");
+      list.classList.remove("hidden");
+
+      const unread = messages.filter((m) => m.status === "new").length;
+      countEl.textContent = unread > 0 ? `${unread} sin leer · ${messages.length} en total` : `${messages.length} mensajes`;
+
+      for (const m of messages as ContactMessage[]) {
+        const node = template.content.cloneNode(true) as DocumentFragment;
+
+        node.querySelector('[data-field="name"]')!.textContent = m.name;
+        if (m.status === "new") node.querySelector('[data-field="new-badge"]')?.classList.remove("hidden");
+
+        const metaParts = [m.email, m.phone, m.entity, m.activity].filter(Boolean);
+        node.querySelector('[data-field="meta"]')!.textContent = metaParts.join(" · ");
+        node.querySelector('[data-field="date"]')!.textContent = dateFormatter.format(new Date(m.created_at));
+        node.querySelector('[data-field="message"]')!.textContent = m.message;
+
+        const mailto = node.querySelector('[data-field="mailto"]') as HTMLAnchorElement;
+        mailto.href = `mailto:${m.email}?subject=${encodeURIComponent("Re: tu consulta a DronEduca")}`;
+
+        const toggleButton = node.querySelector('[data-field="toggle-read"]') as HTMLButtonElement;
+        toggleButton.textContent = m.status === "new" ? "Marcar como leído" : "Marcar como nuevo";
+        toggleButton.addEventListener("click", async () => {
+          const nextStatus = m.status === "new" ? "read" : "new";
+          const { error } = await supabase.from("contact_messages").update({ status: nextStatus }).eq("id", m.id);
+          if (!error) await load();
+        });
+
+        const archiveButton = node.querySelector('[data-field="archive"]') as HTMLButtonElement;
+        archiveButton.addEventListener("click", async () => {
+          const { error } = await supabase.from("contact_messages").update({ status: "archived" }).eq("id", m.id);
+          if (!error) await load();
+        });
+
+        list.appendChild(node);
+      }
+    }
+
+    await load();
+  }
+</script>

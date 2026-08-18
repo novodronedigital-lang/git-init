@@ -55,6 +55,17 @@ const courses = await getCollection("courses");
     </div>
 
     <div>
+      <h2 class="font-display text-lg font-bold text-navy-900">Mensajes</h2>
+      <a
+        href={adminPath("/mensajes")}
+        class="mt-4 flex items-center gap-4 rounded-2xl border border-navy-100 bg-white px-5 py-4 transition-colors hover:border-sky-300"
+      >
+        <Icon name="mail" class="size-5 text-sky-600" />
+        <span class="text-sm font-semibold text-navy-800">Ver las solicitudes recibidas desde el formulario de contacto</span>
+      </a>
+    </div>
+
+    <div>
       <h2 class="font-display text-lg font-bold text-navy-900">Cursos</h2>
       <div class="mt-4 space-y-4">
         {courses.map((course) => (

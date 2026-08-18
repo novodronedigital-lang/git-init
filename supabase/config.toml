@@ -4,3 +4,8 @@
 # CORS (la petición OPTIONS del navegador no lleva Authorization) y el botón "Publicar cambios" del admin
 # falla con "Failed to send a request to the Edge Function" sin más detalle.
 verify_jwt = false
+
+[functions.notify-contact]
+# La llama el formulario público de /contacto sin sesión — igual que arriba, tiene que ir sin
+# verificación de JWT o el preflight CORS falla para cualquier visitante no autenticado.
+verify_jwt = false

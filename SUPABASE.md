@@ -620,3 +620,67 @@ $$;
 
 Esto solo afecta a quien se registre a partir de ahora — a los alumnos ya registrados les quedará `phone` en blanco
 hasta que lo actualicen o se lo pidas tú a mano.
+
+## 8. Ampliación — mensajes del formulario de contacto
+
+Hasta ahora `/contacto` no guardaba nada en ningún sitio (era un formulario sin conectar). Ejecuta esto en el
+**SQL Editor** para que los mensajes se guarden y solo el equipo pueda leerlos:
+
+```sql
+-- ==========================================================
+-- contact_messages: solicitudes del formulario de /contacto
+-- ==========================================================
+create table public.contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  name text not null,
+  email text not null,
+  phone text,
+  entity text,
+  activity text,
+  message text not null,
+  status text not null default 'new' check (status in ('new', 'read', 'archived'))
+);
+
+alter table public.contact_messages enable row level security;
+
+-- Cualquiera puede enviar el formulario, incluso sin haber iniciado sesión.
+create policy "Cualquiera puede enviar un mensaje de contacto"
+  on public.contact_messages for insert
+  to anon, authenticated
+  with check (true);
+
+-- Solo el equipo (admins) puede leerlos, marcarlos como leídos o archivarlos.
+create policy "Los admins ven los mensajes de contacto"
+  on public.contact_messages for select
+  using (public.is_admin(auth.uid()));
+
+create policy "Los admins actualizan los mensajes de contacto"
+  on public.contact_messages for update
+  using (public.is_admin(auth.uid()));
+```
+
+### Aviso por email a hola@droneduca.com (opcional, con Resend)
+
+Además de guardarse en la tabla (y verse en `/admin/mensajes`), puedes recibir un aviso por email cada vez que
+llega un mensaje nuevo. Esto usa [Resend](https://resend.com) (100 emails/día gratis) a través de una Edge
+Function nueva, `notify-contact`.
+
+1. Crea una cuenta gratuita en [resend.com](https://resend.com). Al registrarte con `hola@droneduca.com`, ya
+   puedes enviarte emails de prueba a esa misma dirección sin verificar ningún dominio — para enviar desde una
+   dirección propia (por ejemplo `notificaciones@droneduca.es`) tendrás que verificar el dominio más adelante
+   desde **Domains** en el panel de Resend (añade unos registros DNS en Sered).
+2. En Resend, ve a **API Keys** → **Create API Key** y cópiala.
+3. En tu terminal (nunca la pegues en un chat), con el proyecto ya vinculado:
+   ```bash
+   supabase secrets set RESEND_API_KEY=tu_api_key_de_resend
+   ```
+4. Despliega la función (sin verificación de JWT, igual que `publish`, porque la llama el propio formulario
+   público sin sesión):
+   ```bash
+   supabase functions deploy notify-contact --no-verify-jwt
+   ```
+
+A partir de ahí, cada envío del formulario de `/contacto` guarda el mensaje y, si `RESEND_API_KEY` está
+configurada, además dispara un email a hola@droneduca.com. Si no la configuras, todo sigue funcionando igual —
+simplemente no llega el aviso por correo, y los mensajes se ven igualmente en `/admin/mensajes`.
