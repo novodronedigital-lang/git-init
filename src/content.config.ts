@@ -28,6 +28,8 @@ const courses = defineCollection({
     category: z.string(),
     price: z.string(),
     brand: z.enum(["droneduca", "novodrone"]).default("droneduca"),
+    /** Miniatura horizontal (1600x900 recomendado) para las tarjetas del catálogo de /cursos. */
+    thumbnail: z.string().optional(),
     includes: z.array(z.string()).optional(),
     forum: z.boolean().default(false),
     calendar: z.boolean().default(false),

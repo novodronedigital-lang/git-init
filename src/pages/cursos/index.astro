@@ -42,17 +42,37 @@ const courses = await getCollection("courses");
         return (
           <a
             href={`/cursos/${course.id}`}
-            class:list={[
-              "group flex flex-col rounded-3xl p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl",
-              isNovodrone
-                ? "border border-navy-800 bg-navy-950 text-white hover:shadow-sky-900/30"
-                : "border border-navy-100 bg-white hover:shadow-sky-900/10",
-            ]}
+            class="group flex flex-col overflow-hidden rounded-[20px] border border-navy-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/10"
           >
-            {isNovodrone ? (
-              <img src="/brand/novodrone-logo.png" alt="Novodrone" class="h-8 w-auto" />
+            {course.data.thumbnail ? (
+              <div class="aspect-video overflow-hidden bg-navy-950">
+                <img
+                  src={course.data.thumbnail}
+                  alt={course.data.title}
+                  class="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              </div>
             ) : (
+              <div
+                class="relative flex aspect-video flex-col items-center justify-center gap-2 text-white/60"
+                style={
+                  isNovodrone
+                    ? "background:linear-gradient(150deg,#103b96,#0a1120)"
+                    : "background:linear-gradient(150deg,#4ea1ff,#0c46c2)"
+                }
+              >
+                <Icon name="camera" class="size-6" />
+                <span class="text-xs">Miniatura de {course.data.title} próximamente</span>
+              </div>
+            )}
+
+            <div class="flex flex-1 flex-col p-6">
               <div class="flex items-center gap-2">
+                {isNovodrone && (
+                  <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-navy-950 px-3 py-1 text-xs font-bold text-white">
+                    Novodrone
+                  </span>
+                )}
                 <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
                   {course.data.category}
                 </span>
@@ -60,35 +80,20 @@ const courses = await getCollection("courses");
                   {course.data.level}
                 </span>
               </div>
-            )}
 
-            <h2 class:list={["mt-4 font-display text-xl font-bold", isNovodrone ? "text-white" : "text-navy-900"]}>
-              {course.data.title}
-            </h2>
-            {course.data.tagline && (
-              <p class:list={["mt-1 text-sm font-semibold", isNovodrone ? "text-sky-300" : "text-sky-700"]}>
-                {course.data.tagline}
-              </p>
-            )}
-            <p class:list={["mt-2 flex-1 text-sm leading-relaxed", isNovodrone ? "text-navy-300" : "text-navy-600"]}>
-              {course.data.description}
-            </p>
+              <h2 class="mt-4 font-display text-xl font-bold text-navy-900">{course.data.title}</h2>
+              {course.data.tagline && <p class="mt-1 text-sm font-semibold text-sky-700">{course.data.tagline}</p>}
+              <p class="mt-2 flex-1 text-sm leading-relaxed text-navy-600">{course.data.description}</p>
 
-            <div class="mt-5 flex items-center justify-between">
-              <span class:list={["font-display text-lg font-extrabold", isNovodrone ? "text-white" : "text-navy-900"]}>
-                {course.data.price}
+              <div class="mt-5 flex items-center justify-between">
+                <span class="font-display text-lg font-extrabold text-navy-900">{course.data.price}</span>
+                <span class="text-xs text-navy-400">{totalLessons} lecciones</span>
+              </div>
+              <span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-sky-700">
+                Ver curso
+                <Icon name="arrow-right" class="size-3.5 transition-transform group-hover:translate-x-1" />
               </span>
-              <span class="text-xs opacity-70">{totalLessons} lecciones</span>
             </div>
-            <span
-              class:list={[
-                "mt-4 inline-flex items-center gap-1 text-sm font-bold",
-                isNovodrone ? "text-sky-300" : "text-sky-700",
-              ]}
-            >
-              Ver curso
-              <Icon name="arrow-right" class="size-3.5 transition-transform group-hover:translate-x-1" />
-            </span>
           </a>
         );
       })}
