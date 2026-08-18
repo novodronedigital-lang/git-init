@@ -593,3 +593,30 @@ se monta esto una sola vez:
 A partir de ahí, el botón **"Publicar cambios"** de `/admin` dispara el build + subida por FTP automáticamente, sin
 que haga falta hacerlo a mano. El flujo manual (`npm run build` + subir `dist/` por FTP) documentado en `DEPLOY.md`
 sigue funcionando igual como alternativa.
+
+## 7. Ampliación — teléfono en el registro
+
+`/registro` ahora pide también un teléfono. Ejecuta esto en el **SQL Editor** de Supabase para guardarlo:
+
+```sql
+-- ==========================================================
+-- profiles: añadir phone
+-- ==========================================================
+alter table public.profiles add column phone text;
+
+-- El trigger de registro también guarda el teléfono
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, full_name, email, phone)
+  values (new.id, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'phone');
+  return new;
+end;
+$$;
+```
+
+Esto solo afecta a quien se registre a partir de ahora — a los alumnos ya registrados les quedará `phone` en blanco
+hasta que lo actualicen o se lo pidas tú a mano.

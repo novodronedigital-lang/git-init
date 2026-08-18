@@ -1,0 +1,107 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { SITE, LEGAL } from "../data/site";
+---
+
+<Layout
+  title="Términos de servicio"
+  description="Condiciones de uso del sitio web, las actividades y el campus online de DronEduca y Novodrone."
+>
+  <section class="py-16 sm:py-20">
+    <div class="container-page prose-content max-w-3xl">
+      <span class="inline-block rounded-full bg-sky-50 px-4 py-1 text-xs font-bold uppercase tracking-wide text-sky-700">
+        Legal
+      </span>
+      <h1 class="mt-4 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Términos de servicio</h1>
+      <p class="mt-4 text-sm text-navy-500">
+        Este documento es un modelo orientativo. {LEGAL.legalName} debe revisarlo con asesoramiento legal antes de
+        su publicación definitiva.
+      </p>
+
+      <h2>Quiénes somos</h2>
+      <p>
+        Estos términos regulan el uso del sitio web droneduca.es (y sus subdominios) y la contratación de las
+        actividades, jornadas, eventos y cursos ofrecidos por <strong>{LEGAL.legalName}</strong> (CIF {LEGAL.cif}),
+        bajo las marcas <strong>DronEduca</strong> y <strong>Novodrone</strong>.
+      </p>
+
+      <h2>Naturaleza de las actividades</h2>
+      <p>
+        Todas nuestras actividades (extraescolares, jornadas, eventos, cursos y talleres, presenciales u online)
+        son de <strong>carácter extraescolar y recreativo</strong>. No otorgan título, certificado ni licencia
+        oficial de piloto de drones. La preparación para certificados oficiales (como el A1/A3 de AESA) es
+        orientativa: la obtención final del certificado depende del organismo oficial correspondiente, no de
+        {LEGAL.legalName}.
+      </p>
+
+      <h2>Menores de edad</h2>
+      <p>
+        Muchas de nuestras actividades están dirigidas a menores de edad. La inscripción y contratación las
+        realiza siempre una persona adulta (madre, padre, tutor legal, o el centro/entidad organizadora en
+        representación del grupo), que garantiza contar con las autorizaciones necesarias para que el menor
+        participe.
+      </p>
+
+      <h2>Cuenta del campus online</h2>
+      <p>
+        Para acceder a los cursos online necesitas crear una cuenta en formacion.droneduca.es con tu nombre,
+        email, teléfono y una contraseña. Eres responsable de mantener la confidencialidad de tu contraseña y de
+        toda la actividad que ocurra desde tu cuenta. Debes proporcionar datos veraces y mantenerlos actualizados.
+      </p>
+      <p>
+        El acceso a cada curso de pago se concede de forma manual tras confirmarse la contratación (hoy en día
+        gestionada fuera de este sitio web: por WhatsApp, transferencia u otro medio acordado contigo). El curso
+        gratuito de iniciación se activa automáticamente al registrarte.
+      </p>
+
+      <h2>Precios y contratación</h2>
+      <p>
+        Los precios mostrados en el sitio web son orientativos y pueden variar según el formato, el número de
+        participantes o el desplazamiento necesario; el presupuesto final se confirma siempre contigo antes de la
+        contratación. Los precios incluyen IVA cuando aplique, salvo que se indique lo contrario.
+      </p>
+
+      <h2>Derecho de desistimiento</h2>
+      <p>
+        Si contratas como consumidor, dispones de 14 días naturales desde la contratación para desistir sin
+        necesidad de justificación, salvo que el servicio ya se haya prestado por completo con tu consentimiento
+        expreso (por ejemplo, si ya has empezado a usar el curso online) o que la actividad tenga una fecha
+        concreta ya realizada. Para ejercer este derecho, escríbenos a <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+      </p>
+
+      <h2>Uso del foro y las clases en directo</h2>
+      <p>
+        En los cursos que incluyen foro o clases en directo, esperamos un trato respetuoso entre todos los
+        participantes. Nos reservamos el derecho de eliminar contenido inapropiado y de suspender el acceso de
+        quien incumpla reiteradamente estas normas básicas de convivencia.
+      </p>
+
+      <h2>Propiedad intelectual</h2>
+      <p>
+        El contenido de los cursos (vídeos, materiales, ejercicios) es para tu uso personal como alumno. No está
+        permitido descargarlo, redistribuirlo ni compartirlo con personas que no hayan contratado el curso.
+      </p>
+
+      <h2>Responsabilidad</h2>
+      <p>
+        En las actividades presenciales con drones, {LEGAL.legalName} cuenta con seguro de responsabilidad civil
+        de la actividad. En las actividades online, no nos hacemos responsables del uso que hagas del contenido
+        fuera del ámbito formativo, ni de interrupciones del servicio por causas ajenas a nuestro control
+        (conexión a internet, disponibilidad de terceros como Supabase, etc.).
+      </p>
+
+      <h2>Modificación de estos términos</h2>
+      <p>
+        Podemos actualizar estos términos para reflejar cambios legales o del servicio. Los cambios importantes se
+        comunicarán a través del propio sitio web.
+      </p>
+
+      <h2>Legislación y jurisdicción</h2>
+      <p>
+        Estos términos se rigen por la legislación española. Si eres consumidor, tienes derecho a acudir a la
+        plataforma europea de resolución de litigios en línea (<a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">ec.europa.eu/consumers/odr</a>)
+        o a las juntas arbitrales de consumo correspondientes.
+      </p>
+    </div>
+  </section>
+</Layout>

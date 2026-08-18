@@ -4,11 +4,11 @@ import { SITE_TARGET, FORMACION_URL } from "../data/site";
 const IS_DEV = import.meta.env.DEV;
 const LOGIN_URL = IS_DEV || SITE_TARGET === "formacion" ? "/login" : `${FORMACION_URL}/login`;
 
-export function signUp(email: string, password: string, fullName: string) {
+export function signUp(email: string, password: string, fullName: string, phone: string) {
   return supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: { data: { full_name: fullName, phone } },
   });
 }
 

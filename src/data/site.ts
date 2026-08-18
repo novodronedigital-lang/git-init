@@ -15,6 +15,19 @@ export const FORMACION_URL = "https://formacion.droneduca.es";
 export const ADMIN_URL = "https://admin.droneduca.es";
 
 /**
+ * Datos legales/fiscales del titular, para el Aviso Legal, la Política de Privacidad y los Términos de
+ * Servicio. "DronEduca" y "Novodrone" son marcas comerciales; el titular legal es la cooperativa.
+ */
+export const LEGAL = {
+  legalName: "SJM TECH S.COOP",
+  cif: "F99553935",
+  // Falta el código postal — añádelo aquí en cuanto lo tengas a mano.
+  address: "Calle Sierra de Guara, 2, Zaragoza",
+  // Falta el número de inscripción en el Registro de Sociedades Cooperativas de Aragón — añádelo aquí.
+  registryNote: "Inscrita en el Registro de Sociedades Cooperativas de Aragón.",
+};
+
+/**
  * Qué subdominio se está generando en este build: "marketing" (droneduca.es, por defecto en local),
  * "formacion" (formacion.droneduca.es) o "admin" (admin.droneduca.es).
  */

@@ -1,0 +1,71 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { SITE, LEGAL } from "../data/site";
+---
+
+<Layout title="Política de cookies" description="Qué cookies utiliza droneduca.es y para qué.">
+  <section class="py-16 sm:py-20">
+    <div class="container-page prose-content max-w-3xl">
+      <span class="inline-block rounded-full bg-sky-50 px-4 py-1 text-xs font-bold uppercase tracking-wide text-sky-700">
+        Legal
+      </span>
+      <h1 class="mt-4 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Política de cookies</h1>
+      <p class="mt-4 text-sm text-navy-500">
+        Este documento es un modelo orientativo. {LEGAL.legalName} debe revisarlo con asesoramiento legal antes de
+        su publicación definitiva.
+      </p>
+
+      <h2>Qué es una cookie</h2>
+      <p>
+        Una cookie es un pequeño archivo que un sitio web guarda en tu navegador para recordar información, como
+        si tienes una sesión iniciada.
+      </p>
+
+      <h2>Qué cookies usamos</h2>
+      <p>
+        Este sitio utiliza <strong>únicamente cookies técnicas necesarias</strong>, sin las cuales el campus online
+        no podría funcionar. No usamos cookies de analítica, publicidad ni redes sociales.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Cookie</th>
+            <th>Finalidad</th>
+            <th>Duración</th>
+            <th>Tipo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>sb-&lt;proyecto&gt;-auth-token</td>
+            <td>Mantiene tu sesión iniciada en el campus (formacion.droneduca.es) y, si eres admin, en el panel de administración</td>
+            <td>100 días o hasta que cierres sesión</td>
+            <td>Técnica / necesaria</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Al ser una cookie estrictamente necesaria para prestar el servicio que solicitas (acceder a tu cuenta), no
+        requiere tu consentimiento previo conforme al artículo 22.2 de la LSSI-CE. Si en el futuro incorporamos
+        cookies de analítica o publicidad, añadiremos aquí el detalle correspondiente y un aviso para pedir tu
+        consentimiento antes de instalarlas.
+      </p>
+
+      <h2>Cómo desactivar las cookies</h2>
+      <p>
+        Puedes eliminar o bloquear las cookies desde la configuración de tu navegador, aunque esto puede impedir
+        que puedas iniciar sesión en el campus. Cada navegador tiene un procedimiento distinto — consulta la ayuda
+        de tu navegador (Chrome, Safari, Firefox, Edge...) para más información.
+      </p>
+
+      <h2>Más información</h2>
+      <p>
+        Para saber cómo tratamos tus datos personales, consulta nuestra
+        <a href="/privacidad">Política de privacidad</a>. Para cualquier duda, escríbenos a
+        <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+      </p>
+    </div>
+  </section>
+</Layout>

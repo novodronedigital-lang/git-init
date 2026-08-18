@@ -40,6 +40,7 @@ const paidCourses = courses
         <div>
           <p class="font-display text-base font-bold text-navy-900" data-field="name"></p>
           <p class="text-xs text-navy-500" data-field="email"></p>
+          <p class="text-xs text-navy-400" data-field="phone"></p>
         </div>
         <button
           type="button"
@@ -74,6 +75,7 @@ const paidCourses = courses
     id: string;
     full_name: string | null;
     email: string | null;
+    phone: string | null;
     created_at: string;
   }
 
@@ -89,7 +91,7 @@ const paidCourses = courses
 
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, full_name, email, created_at")
+      .select("id, full_name, email, phone, created_at")
       .order("created_at", { ascending: false });
 
     const { data: enrollmentRows } = await supabase.from("enrollments").select("user_id, course_slug");
@@ -112,8 +114,12 @@ const paidCourses = courses
         const node = template.content.cloneNode(true) as DocumentFragment;
         const name = profile.full_name || "(sin nombre)";
         const email = profile.email || "";
+        const phone = profile.phone || "";
         node.querySelector('[data-field="name"]')!.textContent = name;
         node.querySelector('[data-field="email"]')!.textContent = email;
+        const phoneEl = node.querySelector('[data-field="phone"]')!;
+        if (phone) phoneEl.textContent = phone;
+        else phoneEl.remove();
 
         const coursesEl = node.querySelector('[data-field="courses"]') as HTMLElement;
         const userEnrollments = enrollmentsByUser.get(profile.id) ?? new Set<string>();
@@ -193,7 +199,7 @@ const paidCourses = courses
         }
 
         const card = node.querySelector('[data-field="card"]') as HTMLElement;
-        card.dataset.searchText = `${name} ${email}`.toLowerCase();
+        card.dataset.searchText = `${name} ${email} ${phone}`.toLowerCase();
 
         list.appendChild(node);
       }

@@ -42,6 +42,18 @@ import Icon from "../components/Icon.astro";
             />
           </div>
           <div>
+            <label for="phone" class="text-sm font-semibold text-navy-800">Teléfono</label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              required
+              autocomplete="tel"
+              placeholder="600 000 000"
+              class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
             <label for="password" class="text-sm font-semibold text-navy-800">Contraseña</label>
             <input
               id="password"
@@ -56,9 +68,25 @@ import Icon from "../components/Icon.astro";
           </div>
         </div>
 
+        <label class="mt-5 flex items-start gap-2.5 text-xs text-navy-600">
+          <input
+            id="accept-legal"
+            name="accept-legal"
+            type="checkbox"
+            required
+            class="mt-0.5 size-4 shrink-0 rounded border-navy-300 text-sky-600 focus:ring-sky-500"
+          />
+          <span>
+            He leído y acepto la
+            <a href="/privacidad" target="_blank" class="font-semibold text-sky-700 hover:underline">Política de privacidad</a>
+            y los
+            <a href="/terminos" target="_blank" class="font-semibold text-sky-700 hover:underline">Términos de servicio</a>.
+          </span>
+        </label>
+
         <button
           type="submit"
-          class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Crear cuenta
           <Icon name="arrow-right" class="size-4" />
@@ -90,13 +118,14 @@ import Icon from "../components/Icon.astro";
 
     const fullName = (form.elements.namedItem("full-name") as HTMLInputElement).value;
     const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const phone = (form.elements.namedItem("phone") as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
     errorBox?.classList.add("hidden");
     successBox?.classList.add("hidden");
     if (submitButton) submitButton.disabled = true;
 
-    const { data, error } = await signUp(email, password, fullName);
+    const { data, error } = await signUp(email, password, fullName, phone);
 
     if (error) {
       if (errorBox) {
