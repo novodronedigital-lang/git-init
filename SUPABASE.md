@@ -653,11 +653,11 @@ create policy "Cualquiera puede enviar un mensaje de contacto"
 -- Solo el equipo (admins) puede leerlos, marcarlos como leídos o archivarlos.
 create policy "Los admins ven los mensajes de contacto"
   on public.contact_messages for select
-  using (public.is_admin(auth.uid()));
+  using (public.is_admin());
 
 create policy "Los admins actualizan los mensajes de contacto"
   on public.contact_messages for update
-  using (public.is_admin(auth.uid()));
+  using (public.is_admin());
 ```
 
 ### Aviso por email a hola@droneduca.com (opcional, con Resend)
