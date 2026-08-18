@@ -8,6 +8,9 @@ price: "99,99€"
 brand: "droneduca"
 campusDesign: "webinar"
 whatsapp: false
+ctaLabel: "Comprar ahora"
+# Enlace de pago personalizado en la web de Novodrone — pendiente de crear.
+# ctaHref: "https://novodrone.es/checkout/piloto-a1-a3"
 modules:
   - title: "Normativa y examen A1/A3"
     instructor: "Equipo DronEduca"

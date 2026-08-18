@@ -2,25 +2,30 @@
 import type { CollectionEntry } from "astro:content";
 import Icon from "../Icon.astro";
 import { SITE } from "../../data/site";
+import { getAdminHref } from "../../data/site";
 import "../../styles/global.css";
 
 interface Props {
-  course: CollectionEntry<"courses">;
-  active: "inicio" | "clases" | "calendario" | "acerca";
+  /** Cuando no se pasa, se muestra el shell sin pestañas (portada "Mi campus"). */
+  course?: CollectionEntry<"courses">;
+  active?: "inicio" | "clases" | "calendario" | "acerca";
   title: string;
   description?: string;
 }
 
-const { course, active, title, description = course.data.description } = Astro.props;
+const { course, active, title, description = course?.data.description } = Astro.props;
 const pageTitle = `${title} | ${SITE.name} Campus`;
+const adminHref = getAdminHref();
 
-const base = `/campus/${course.id}`;
-const tabs = [
-  { key: "inicio", label: "Inicio", href: base },
-  { key: "clases", label: "Clases", href: `${base}/clases` },
-  ...(course.data.calendar ? [{ key: "calendario", label: "Calendario", href: `${base}/calendario` }] : []),
-  { key: "acerca", label: "Acerca de", href: `${base}/acerca` },
-] as const;
+const base = course ? `/campus/${course.id}` : null;
+const tabs = base
+  ? ([
+      { key: "inicio", label: "Inicio", href: base },
+      { key: "clases", label: "Clases", href: `${base}/clases` },
+      ...(course!.data.calendar ? [{ key: "calendario", label: "Calendario", href: `${base}/calendario` }] : []),
+      { key: "acerca", label: "Acerca de", href: `${base}/acerca` },
+    ] as const)
+  : null;
 ---
 
 <!doctype html>
@@ -66,11 +71,23 @@ const tabs = [
 
         <p class="min-w-0 flex-1 truncate text-[13px] text-navy-300">
           <a href="/campus" class="hover:text-white">Mi campus</a>
-          <span class="mx-1.5">/</span>
-          <strong class="font-bold text-white">{course.data.title}</strong>
+          {course && (
+            <>
+              <span class="mx-1.5">/</span>
+              <strong class="font-bold text-white">{course.data.title}</strong>
+            </>
+          )}
         </p>
 
         <div class="flex shrink-0 items-center gap-2.5">
+          <a
+            id="campus-admin-link"
+            href={adminHref}
+            class="hidden items-center gap-1.5 rounded-full border border-navy-700 px-3 py-1.5 text-[12.5px] font-bold text-navy-200 transition-colors hover:border-navy-500 hover:text-white sm:inline-flex"
+          >
+            <Icon name="lock" class="size-3.5" />
+            Admin
+          </a>
           <span id="campus-user-name" class="hidden text-[13px] font-semibold text-navy-100 sm:inline"></span>
           <button
             id="campus-logout"
@@ -84,22 +101,24 @@ const tabs = [
         </div>
       </div>
 
-      <nav class="border-t border-navy-800">
-        <div class="container-page flex gap-1 overflow-x-auto px-2 sm:px-5">
-          {tabs.map((tab) => (
-            <a
-              href={tab.href}
-              aria-current={active === tab.key ? "page" : undefined}
-              class:list={[
-                "shrink-0 whitespace-nowrap rounded-t-lg px-4 py-2.5 text-[13.5px] font-bold transition-colors",
-                active === tab.key ? "bg-navy-50 text-navy-900" : "text-navy-300 hover:text-white",
-              ]}
-            >
-              {tab.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      {tabs && (
+        <nav class="border-t border-navy-800">
+          <div class="container-page flex gap-1 overflow-x-auto px-2 sm:px-5">
+            {tabs.map((tab) => (
+              <a
+                href={tab.href}
+                aria-current={active === tab.key ? "page" : undefined}
+                class:list={[
+                  "shrink-0 whitespace-nowrap rounded-t-lg px-4 py-2.5 text-[13.5px] font-bold transition-colors",
+                  active === tab.key ? "bg-navy-50 text-navy-900" : "text-navy-300 hover:text-white",
+                ]}
+              >
+                {tab.label}
+              </a>
+            ))}
+          </div>
+        </nav>
+      )}
     </header>
 
     <main class="flex-1 bg-navy-50">
@@ -111,7 +130,7 @@ const tabs = [
     <footer class="border-t border-navy-100 bg-white py-6">
       <div class="container-page flex flex-col items-center justify-between gap-2 text-xs text-navy-400 sm:flex-row">
         <p>© {new Date().getFullYear()} {SITE.name}</p>
-        <a href="/campus" class="font-semibold text-sky-700 hover:underline">← Volver a Mi campus</a>
+        {course && <a href="/campus" class="font-semibold text-sky-700 hover:underline">← Volver a Mi campus</a>}
       </div>
     </footer>
   </body>
@@ -120,6 +139,7 @@ const tabs = [
 <script>
   import { applyMaintenanceGate } from "../../lib/maintenance";
   import { getSession, signOut } from "../../lib/auth";
+  import { isAdmin } from "../../lib/admin";
 
   applyMaintenanceGate();
 
@@ -141,6 +161,10 @@ const tabs = [
       nameEl.classList.remove("hidden");
     }
     if (initialsEl) initialsEl.textContent = initials || "?";
+
+    if (await isAdmin(session.user.id)) {
+      document.getElementById("campus-admin-link")?.classList.remove("hidden");
+    }
   }
 
   document.getElementById("campus-logout")?.addEventListener("click", async () => {

@@ -37,6 +37,10 @@ const courses = defineCollection({
     campusDesign: z.enum(["classic", "webinar"]).default("classic"),
     whatsapp: z.boolean().default(false),
     whatsappUrl: z.string().optional(),
+    // Botón de acción en el catálogo /cursos: texto del botón y enlace (interno o externo, p. ej. el
+    // checkout de Novodrone o un enlace para agendar llamada). Si no hay ctaHref, se muestra "próximamente".
+    ctaLabel: z.string().optional(),
+    ctaHref: z.string().optional(),
     modules: z.array(
       z.object({
         title: z.string(),

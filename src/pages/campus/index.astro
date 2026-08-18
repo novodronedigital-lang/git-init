@@ -1,98 +1,70 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import Icon from "../../components/Icon.astro";
+import CampusShell from "../../components/campus/CampusShell.astro";
 import { getCollection } from "astro:content";
-import { getAdminHref } from "../../data/site";
 
-const adminHref = getAdminHref();
 const courses = await getCollection("courses");
 const courseSummaries = courses.map((course) => ({
   slug: course.id,
   title: course.data.title,
+  tagline: course.data.tagline ?? null,
+  thumbnail: course.data.thumbnail ?? null,
   totalLessons: course.data.modules.reduce((sum, m) => sum + m.lessons.length, 0),
 }));
 ---
 
-<Layout title="Mi campus" description="Tu progreso en los cursos online de DronEduca.">
-  <section class="bg-sky-50/60 py-12 sm:py-16">
-    <div class="container-page flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-      <div>
-        <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
-          Campus DronEduca
-        </span>
-        <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">Mi campus</h1>
-      </div>
-      <div class="flex items-center gap-3">
-        <a
-          id="admin-link"
-          href={adminHref}
-          class="hidden items-center gap-2 rounded-full bg-navy-950 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-navy-800"
-        >
-          <Icon name="lock" class="size-4" />
-          Admin
-        </a>
-        <button
-          id="logout-button"
-          type="button"
-          class="inline-flex items-center gap-2 rounded-full border border-navy-200 bg-white px-5 py-2.5 text-sm font-bold text-navy-700 transition-colors hover:border-sky-400 hover:text-sky-700"
-        >
-          <Icon name="log-out" class="size-4" />
-          Cerrar sesión
-        </button>
-      </div>
-    </div>
-  </section>
+<CampusShell title="Mi campus">
+  <h1 class="font-display text-2xl font-extrabold text-navy-900 sm:text-[26px]">Mi campus</h1>
+  <p class="mt-1 text-[13.5px] text-navy-500">Tus cursos y tu progreso, todo en un mismo sitio.</p>
 
-  <section class="py-16 sm:py-20">
-    <div class="container-page">
-      <p id="loading-state" class="text-sm text-navy-500">Cargando tus cursos...</p>
+  <p id="loading-state" class="mt-6 text-sm text-navy-500">Cargando tus cursos...</p>
 
-      <p id="empty-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
-        Todavía no tienes acceso a ningún curso.
-        <a href="/cursos" class="font-semibold text-sky-700 hover:underline">Ver catálogo de cursos</a>
-      </p>
+  <p id="empty-state" class="mt-6 hidden rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+    Todavía no tienes acceso a ningún curso.
+    <a href="/cursos" class="font-semibold text-sky-700 hover:underline">Ver catálogo de cursos</a>
+  </p>
 
-      <div id="courses-grid" class="hidden grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
-    </div>
-  </section>
+  <div id="courses-grid" class="mt-6 hidden grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
 
   <template id="course-card-template">
-    <a
-      class="group flex flex-col rounded-3xl border border-navy-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/10"
-    >
-      <h3 class="font-display text-lg font-bold text-navy-900" data-field="title"></h3>
-      <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-navy-100">
-        <div class="h-full rounded-full bg-sky-600" data-field="bar"></div>
+    <a class="group flex flex-col overflow-hidden rounded-[20px] border border-navy-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-navy-900/10">
+      <div data-field="thumb-wrap" class="aspect-video overflow-hidden bg-navy-950">
+        <img data-field="thumb-img" class="hidden size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+        <div data-field="thumb-placeholder" class="flex size-full items-center justify-center bg-gradient-to-br from-sky-600 to-navy-950 font-display text-3xl font-extrabold text-white/70">
+        </div>
       </div>
-      <div class="mt-2 flex items-center justify-between text-xs text-navy-500">
-        <span data-field="count"></span>
-        <span class="font-bold text-sky-700" data-field="percent"></span>
+      <div class="flex flex-1 flex-col p-5">
+        <h3 class="font-display text-lg font-bold text-navy-900" data-field="title"></h3>
+        <p class="mt-0.5 text-xs font-semibold text-sky-700" data-field="tagline"></p>
+        <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-navy-100">
+          <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-sky-700" data-field="bar"></div>
+        </div>
+        <div class="mt-2 flex items-center justify-between text-xs text-navy-500">
+          <span data-field="count"></span>
+          <span class="font-bold text-sky-700" data-field="percent"></span>
+        </div>
       </div>
     </a>
   </template>
 
   <script type="application/json" id="course-summaries-data" set:html={JSON.stringify(courseSummaries)} />
-</Layout>
+</CampusShell>
 
 <script>
-  import { requireSession, signOut } from "../../lib/auth";
+  import { requireSession } from "../../lib/auth";
   import { isAdmin } from "../../lib/admin";
   import { supabase } from "../../lib/supabase";
 
   interface CourseSummary {
     slug: string;
     title: string;
+    tagline: string | null;
+    thumbnail: string | null;
     totalLessons: number;
   }
 
   const courseSummaries: CourseSummary[] = JSON.parse(
     document.getElementById("course-summaries-data")!.textContent!,
   );
-
-  document.getElementById("logout-button")?.addEventListener("click", async () => {
-    await signOut();
-    window.location.href = "/";
-  });
 
   const session = await requireSession();
 
@@ -107,11 +79,6 @@ const courseSummaries = courses.map((course) => ({
       supabase.from("enrollments").select("course_slug").eq("user_id", session.user.id),
       isAdmin(session.user.id),
     ]);
-
-    if (admin) {
-      document.getElementById("admin-link")?.classList.remove("hidden");
-      document.getElementById("admin-link")?.classList.add("inline-flex");
-    }
 
     const completedByCourse = new Map<string, number>();
     for (const row of progressRows ?? []) {
@@ -141,6 +108,22 @@ const courseSummaries = courses.map((course) => ({
         const link = node.querySelector("a") as HTMLAnchorElement;
         link.href = `/campus/${course.slug}`;
         node.querySelector('[data-field="title"]')!.textContent = course.title;
+
+        const taglineEl = node.querySelector('[data-field="tagline"]')!;
+        if (course.tagline) taglineEl.textContent = course.tagline;
+        else taglineEl.remove();
+
+        if (course.thumbnail) {
+          const img = node.querySelector('[data-field="thumb-img"]') as HTMLImageElement;
+          img.src = course.thumbnail;
+          img.alt = course.title;
+          img.classList.remove("hidden");
+          node.querySelector('[data-field="thumb-placeholder"]')?.remove();
+        } else {
+          const placeholder = node.querySelector('[data-field="thumb-placeholder"]')!;
+          placeholder.textContent = course.title.slice(0, 1);
+        }
+
         (node.querySelector('[data-field="bar"]') as HTMLElement).style.width = `${percent}%`;
         node.querySelector('[data-field="count"]')!.textContent = `${completed} / ${course.totalLessons} lecciones`;
         node.querySelector('[data-field="percent"]')!.textContent = `${percent}%`;

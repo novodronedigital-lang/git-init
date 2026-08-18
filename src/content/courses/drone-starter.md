@@ -6,6 +6,8 @@ level: "Iniciación"
 category: "Gratuito"
 price: "Gratis"
 brand: "droneduca"
+ctaLabel: "Regístrate gratis"
+ctaHref: "/registro"
 modules:
   - title: "Introducción al mundo drone"
     lessons:
