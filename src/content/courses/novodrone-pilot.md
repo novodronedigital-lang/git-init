@@ -11,8 +11,7 @@ calendar: true
 campusDesign: "webinar"
 whatsapp: true
 ctaLabel: "Agenda tu llamada"
-# Enlace para reservar una llamada (Calendly o similar) — pendiente de crear.
-# ctaHref: "https://calendly.com/novodrone/llamada"
+ctaHref: "https://calendly.com/novodronedigital/30min"
 includes:
   - "1 drone FPV"
   - "2 drones de iniciación: S16P y H36"
