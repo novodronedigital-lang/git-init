@@ -1,5 +1,6 @@
 ---
 import Icon from "../Icon.astro";
+import CookieBanner from "../CookieBanner.astro";
 import { SITE } from "../../data/site";
 import { adminPath, adminHomePath } from "../../lib/admin";
 import "../../styles/global.css";
@@ -122,6 +123,7 @@ const tabs = [
         <p>Panel privado — no indexado.</p>
       </div>
     </footer>
+    <CookieBanner />
   </body>
 </html>
 

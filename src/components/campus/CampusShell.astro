@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import Icon from "../Icon.astro";
+import CookieBanner from "../CookieBanner.astro";
 import { SITE } from "../../data/site";
 import { getAdminHref } from "../../data/site";
 import "../../styles/global.css";
@@ -133,6 +134,7 @@ const tabs = base
         {course && <a href="/campus" class="font-semibold text-sky-700 hover:underline">← Volver a Mi campus</a>}
       </div>
     </footer>
+    <CookieBanner />
   </body>
 </html>
 
