@@ -1,5 +1,5 @@
 ---
-import Layout from "../../../../layouts/Layout.astro";
+import CampusShell from "../../../../components/campus/CampusShell.astro";
 import Icon from "../../../../components/Icon.astro";
 import { getCollection } from "astro:content";
 
@@ -16,34 +16,26 @@ export async function getStaticPaths() {
 const { course } = Astro.props;
 ---
 
-<Layout title={`Foro · ${course.data.title}`} description="Foro de la comunidad del curso.">
-  <section class="bg-sky-50/60 py-12 sm:py-16">
-    <div class="container-page flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <a href={`/campus/${course.id}`} class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700">
-          ← {course.data.title}
-        </a>
-        <h1 class="mt-4 font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">Foro</h1>
-      </div>
-      <a
-        href={`/campus/${course.id}/foro/nuevo`}
-        class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 hover:bg-amber-600"
-      >
-        <Icon name="check" class="size-4" />
-        Nuevo post
-      </a>
-    </div>
-  </section>
+<CampusShell course={course} active="foro" title={`Foro · ${course.data.title}`} description="Foro de la comunidad del curso.">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h1 class="font-display text-2xl font-extrabold text-navy-900 sm:text-[26px]">Foro</h1>
+    <a
+      href={`/campus/${course.id}/foro/nuevo`}
+      class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 hover:bg-amber-600"
+    >
+      <Icon name="check" class="size-4" />
+      Nuevo post
+    </a>
+  </div>
+  <p class="mt-1 text-[13.5px] text-navy-500">Dudas y conversación entre los alumnos de {course.data.title}.</p>
 
-  <section class="py-16 sm:py-20">
-    <div class="container-page max-w-3xl">
-      <p id="loading-state" class="text-sm text-navy-500">Cargando el foro...</p>
-      <p id="empty-state" class="hidden rounded-3xl border border-navy-100 bg-white p-8 text-center text-navy-600">
-        Todavía no hay posts. ¡Sé el primero en escribir!
-      </p>
-      <div id="posts-list" class="hidden space-y-3"></div>
-    </div>
-  </section>
+  <div class="mt-6 max-w-3xl">
+    <p id="loading-state" class="text-sm text-navy-500">Cargando el foro...</p>
+    <p id="empty-state" class="hidden rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+      Todavía no hay posts. ¡Sé el primero en escribir!
+    </p>
+    <div id="posts-list" class="hidden space-y-3"></div>
+  </div>
 
   <template id="post-row-template">
     <a class="block rounded-2xl border border-navy-100 bg-white p-5 transition-colors hover:border-sky-300">
@@ -51,7 +43,7 @@ const { course } = Astro.props;
       <p class="mt-1 text-xs text-navy-500" data-field="meta"></p>
     </a>
   </template>
-</Layout>
+</CampusShell>
 
 <script>
   import { requireSession } from "../../../../lib/auth";

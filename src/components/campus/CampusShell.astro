@@ -9,7 +9,7 @@ import "../../styles/global.css";
 interface Props {
   /** Cuando no se pasa, se muestra el shell sin pestañas (portada "Mi campus"). */
   course?: CollectionEntry<"courses">;
-  active?: "inicio" | "clases" | "calendario" | "acerca";
+  active?: "inicio" | "clases" | "calendario" | "acerca" | "foro";
   title: string;
   description?: string;
 }
@@ -25,6 +25,7 @@ const tabs = base
       { key: "clases", label: "Clases", href: `${base}/clases` },
       ...(course!.data.calendar ? [{ key: "calendario", label: "Calendario", href: `${base}/calendario` }] : []),
       { key: "acerca", label: "Acerca de", href: `${base}/acerca` },
+      ...(course!.data.forum ? [{ key: "foro", label: "Foro", href: `${base}/foro` }] : []),
     ] as const)
   : null;
 ---

@@ -6,6 +6,7 @@ level: "Iniciación"
 category: "Gratuito"
 price: "Gratis"
 brand: "droneduca"
+campusDesign: "webinar"
 ctaLabel: "Regístrate gratis"
 ctaHref: "/registro"
 modules:
