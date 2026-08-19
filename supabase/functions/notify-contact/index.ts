@@ -1,7 +1,4 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, escapeHtml, sendNotificationEmail } from "../_shared/notify.ts";
 
 interface ContactPayload {
   name: string;
@@ -10,10 +7,6 @@ interface ContactPayload {
   entity?: string;
   activity?: string;
   message: string;
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
 // La llama el propio formulario público de /contacto, sin sesión — no requiere verificación de JWT.
@@ -25,21 +18,10 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return new Response("Notify is not configured yet (missing RESEND_API_KEY secret)", {
-        status: 500,
-        headers: corsHeaders,
-      });
-    }
-
     const payload = (await req.json()) as Partial<ContactPayload>;
     if (!payload.name || !payload.email || !payload.message) {
       return new Response("Missing required fields", { status: 400, headers: corsHeaders });
     }
-
-    const notifyTo = Deno.env.get("NOTIFY_EMAIL") ?? "hola@droneduca.com";
-    const fromAddress = Deno.env.get("NOTIFY_FROM") ?? "DronEduca <onboarding@resend.dev>";
 
     const rows = [
       ["Nombre", payload.name],
@@ -59,27 +41,14 @@ Deno.serve(async (req: Request) => {
       </div>
     `;
 
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [notifyTo],
-        reply_to: payload.email,
-        subject: `Nuevo mensaje de contacto: ${payload.name}`,
-        html,
-      }),
+    const result = await sendNotificationEmail({
+      subject: `Nuevo mensaje de contacto: ${payload.name}`,
+      html,
+      replyTo: payload.email,
     });
 
-    if (!resendResponse.ok) {
-      const text = await resendResponse.text();
-      return new Response(`Error sending email (${resendResponse.status}): ${text}`, {
-        status: 500,
-        headers: corsHeaders,
-      });
+    if (!result.ok) {
+      return new Response(`Error sending email: ${result.error}`, { status: 500, headers: corsHeaders });
     }
 
     return new Response("OK", { headers: corsHeaders });

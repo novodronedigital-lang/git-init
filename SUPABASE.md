@@ -660,21 +660,23 @@ create policy "Los admins actualizan los mensajes de contacto"
   using (public.is_admin());
 ```
 
-### Aviso por email a hola@droneduca.com (opcional, con Resend)
+### Aviso por email a hola@droneduca.com (opcional, por SMTP directo — sin servicio externo)
 
 Además de guardarse en la tabla (y verse en `/admin/mensajes`), puedes recibir un aviso por email cada vez que
-llega un mensaje nuevo, **y también cada vez que alguien crea una cuenta en `/registro`**. Esto usa
-[Resend](https://resend.com) (100 emails/día gratis) a través de dos Edge Functions, `notify-contact` y
-`notify-signup` — mismo mecanismo, misma API key de Resend, cada una avisando de un evento distinto.
+llega un mensaje nuevo, **y también cada vez que alguien crea una cuenta en `/registro`**. Esto se envía por
+**SMTP directo usando un buzón de tu propio hosting** (Sered) — sin depender de ningún servicio externo tipo
+Resend/SendGrid. La lógica de envío vive en `supabase/functions/_shared/notify.ts` (usa `nodemailer` vía
+`npm:nodemailer`, compatible con Deno) y la usan dos Edge Functions, `notify-contact` y `notify-signup`.
 
-1. Crea una cuenta gratuita en [resend.com](https://resend.com). Al registrarte con `hola@droneduca.com`, ya
-   puedes enviarte emails de prueba a esa misma dirección sin verificar ningún dominio — para enviar desde una
-   dirección propia (por ejemplo `notificaciones@droneduca.es`) tendrás que verificar el dominio más adelante
-   desde **Domains** en el panel de Resend (añade unos registros DNS en Sered).
-2. En Resend, ve a **API Keys** → **Create API Key** y cópiala.
-3. En tu terminal (nunca la pegues en un chat), con el proyecto ya vinculado:
+1. En el panel de Sered (cPanel) → **Cuentas de correo**, crea (o reutiliza) un buzón para enviar estos avisos —
+   recomendado uno dedicado como `web@droneduca.es` en vez de tu buzón personal, para no mezclar contraseñas.
+   Al lado del buzón, **"Configurar cliente de correo"** te da el host y puerto SMTP (para DronEduca:
+   `mail.droneduca.es`, puerto `465`).
+2. **Importante**: el puerto tiene que ser **465** — Deno Deploy (donde corren las Edge Functions) bloquea las
+   conexiones salientes a los puertos 25 y 587, los otros dos habituales para SMTP.
+3. En tu terminal (nunca pegues la contraseña en un chat), con el proyecto ya vinculado:
    ```bash
-   supabase secrets set RESEND_API_KEY=tu_api_key_de_resend
+   supabase secrets set SMTP_HOST=mail.droneduca.es SMTP_PORT=465 SMTP_USER=web@droneduca.es SMTP_PASS=tu_contraseña_del_buzon
    ```
 4. Despliega las dos funciones (sin verificación de JWT, igual que `publish`, porque las llaman formularios
    públicos sin sesión garantizada):
@@ -684,14 +686,12 @@ llega un mensaje nuevo, **y también cada vez que alguien crea una cuenta en `/r
    ```
 
 A partir de ahí, cada envío del formulario de `/contacto` y cada alta nueva en `/registro` disparan un email a
-hola@droneduca.com si `RESEND_API_KEY` está configurada. Si no la configuras, todo sigue funcionando igual —
-simplemente no llega el aviso por correo (los mensajes de contacto se siguen viendo en `/admin/mensajes`, y las
-cuentas nuevas en `/admin/alumnos`).
+hola@droneduca.com si los 4 secrets `SMTP_*` están configurados. Si no los configuras, todo sigue funcionando
+igual — simplemente no llega el aviso por correo (los mensajes de contacto se siguen viendo en
+`/admin/mensajes`, y las cuentas nuevas en `/admin/alumnos`).
 
-Por defecto el aviso llega a `hola@droneduca.com` desde `DronEduca <onboarding@resend.dev>` — puedes cambiar
-cualquiera de los dos con `supabase secrets set NOTIFY_EMAIL=... NOTIFY_FROM="DronEduca <web@droneduca.es>"` (el
-`NOTIFY_FROM` con un dominio propio como `droneduca.es` solo funciona una vez verificado ese dominio en Resend,
-paso 1 de arriba).
+Por defecto el aviso llega a `hola@droneduca.com`, enviado desde el propio `SMTP_USER` — puedes cambiar
+cualquiera de los dos con `supabase secrets set NOTIFY_EMAIL=otra@direccion.com NOTIFY_FROM="DronEduca <web@droneduca.es>"`.
 
 ## 9. Ampliación — galería de fotos y vídeo por taller
 

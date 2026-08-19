@@ -1,16 +1,9 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, escapeHtml, sendNotificationEmail } from "../_shared/notify.ts";
 
 interface SignupPayload {
   fullName: string;
   email: string;
   phone?: string;
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
 // La llama el propio formulario público de /registro justo después de crear la cuenta (con o sin sesión activa
@@ -22,21 +15,10 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return new Response("Notify is not configured yet (missing RESEND_API_KEY secret)", {
-        status: 500,
-        headers: corsHeaders,
-      });
-    }
-
     const payload = (await req.json()) as Partial<SignupPayload>;
     if (!payload.fullName || !payload.email) {
       return new Response("Missing required fields", { status: 400, headers: corsHeaders });
     }
-
-    const notifyTo = Deno.env.get("NOTIFY_EMAIL") ?? "hola@droneduca.com";
-    const fromAddress = Deno.env.get("NOTIFY_FROM") ?? "DronEduca <onboarding@resend.dev>";
 
     const html = `
       <div style="font-family:sans-serif;font-size:14px;color:#131c2e;">
@@ -49,27 +31,14 @@ Deno.serve(async (req: Request) => {
       </div>
     `;
 
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [notifyTo],
-        reply_to: payload.email,
-        subject: `Nueva cuenta: ${payload.fullName}`,
-        html,
-      }),
+    const result = await sendNotificationEmail({
+      subject: `Nueva cuenta: ${payload.fullName}`,
+      html,
+      replyTo: payload.email,
     });
 
-    if (!resendResponse.ok) {
-      const text = await resendResponse.text();
-      return new Response(`Error sending email (${resendResponse.status}): ${text}`, {
-        status: 500,
-        headers: corsHeaders,
-      });
+    if (!result.ok) {
+      return new Response(`Error sending email: ${result.error}`, { status: 500, headers: corsHeaders });
     }
 
     return new Response("OK", { headers: corsHeaders });
