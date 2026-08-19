@@ -114,6 +114,9 @@ Desde que existe `/admin/contenido` (el CMS de los textos de las páginas), lo n
    `droneduca.es`:
    - `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` — los mismos valores que tienes en tu `.env`.
    - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — las credenciales FTP que ya usas para subir a `public_html`.
+   - `SUPABASE_SERVICE_ROLE_KEY` — desde Supabase Dashboard → Project Settings → API → `service_role` key
+     (secreta). Solo la usa el build de `droneduca.es` para generar las páginas de `/galeria/[slug]` (ver
+     `SUPABASE.md` §9) — no la pegues nunca en un chat, cópiala directo del Dashboard a GitHub.
 3. 🔒 **Token de GitHub para la Edge Function**: en GitHub → tu avatar → Settings → Developer settings →
    Personal access tokens → Fine-grained tokens → Generate new token. Dale acceso **solo a este repositorio**, con
    permiso de **Contents: Read-only** y **Actions: Read and write**. Cópialo (solo se ve una vez).

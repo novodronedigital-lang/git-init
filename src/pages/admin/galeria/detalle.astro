@@ -1,0 +1,297 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import Icon from "../../../components/Icon.astro";
+import { adminPath } from "../../../lib/admin";
+---
+
+<AdminShell
+  active="galeria"
+  title="Gestionar galería"
+  description="Sube y organiza las fotos y vídeos de esta galería."
+  back={{ href: adminPath("/galeria"), label: "Galería" }}
+>
+  <p id="loading-state" class="text-sm text-navy-500">Cargando galería...</p>
+  <p id="not-found-state" class="hidden rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+    No se ha encontrado esta galería.
+  </p>
+
+  <div id="gallery-content" class="hidden max-w-4xl">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <input
+          id="title-input"
+          type="text"
+          class="w-full rounded-xl border border-transparent bg-transparent px-0 font-display text-2xl font-extrabold text-navy-900 outline-none focus:rounded-xl focus:border-navy-200 focus:bg-white focus:px-3 focus:py-1.5 sm:text-[26px]"
+        />
+        <div class="mt-2 flex flex-wrap items-center gap-3">
+          <input
+            id="date-input"
+            type="date"
+            class="rounded-xl border border-navy-200 px-3 py-1.5 text-xs font-semibold text-navy-600 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+          />
+          <label class="flex items-center gap-2 text-xs font-bold text-navy-600">
+            <input id="published-toggle" type="checkbox" class="size-4 rounded border-navy-300 accent-sky-600" />
+            Publicada
+          </label>
+        </div>
+      </div>
+      <a
+        id="view-link"
+        target="_blank"
+        rel="noopener"
+        class="hidden shrink-0 items-center gap-1.5 rounded-full border border-navy-200 px-4 py-2 text-xs font-bold text-navy-600 hover:border-sky-400 hover:text-sky-700 sm:inline-flex"
+      >
+        Ver galería pública →
+      </a>
+    </div>
+
+    <textarea
+      id="description-input"
+      rows="2"
+      placeholder="Descripción opcional..."
+      class="mt-3 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-700 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+    ></textarea>
+    <p id="save-status" class="mt-2 hidden text-xs"></p>
+
+    <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
+      Recuerda pulsar <a href={adminPath("/")} class="underline">"Publicar cambios"</a> en el Dashboard para que lo
+      que subas aquí se vea en el enlace público. Si despublicas una galería ya publicada, los archivos dejan de
+      verse en la página pero no se borran de verdad hasta que la elimines.
+    </div>
+
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="font-display text-lg font-bold text-navy-900">Fotos y vídeos</h2>
+      <label
+        class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-navy-950 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-navy-800"
+      >
+        <Icon name="camera" class="size-4" />
+        <span id="upload-label">Subir archivos</span>
+        <input id="file-input" type="file" accept="image/*,video/*" multiple class="hidden" />
+      </label>
+    </div>
+    <p id="upload-status" class="mt-2 hidden text-sm"></p>
+
+    <p id="items-empty-state" class="mt-6 hidden rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+      Todavía no has subido ninguna foto o vídeo.
+    </p>
+    <div id="items-grid" class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"></div>
+
+    <div class="mt-12 border-t border-navy-100 pt-6">
+      <button
+        id="delete-gallery-button"
+        type="button"
+        class="inline-flex items-center gap-2 rounded-full border border-red-200 px-5 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50"
+      >
+        Eliminar esta galería
+      </button>
+    </div>
+  </div>
+
+  <template id="item-card-template">
+    <div class="group relative aspect-square overflow-hidden rounded-xl border border-navy-100 bg-navy-50" data-field="card">
+      <img data-field="thumb" class="hidden h-full w-full object-cover" />
+      <video data-field="video-thumb" class="hidden h-full w-full object-cover" muted></video>
+      <button
+        type="button"
+        data-field="delete"
+        aria-label="Eliminar"
+        class="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-navy-950/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+      >
+        <Icon name="close" class="size-4" />
+      </button>
+    </div>
+  </template>
+</AdminShell>
+
+<script>
+  import { requireAdmin, adminPath } from "../../../lib/admin";
+  import { supabase } from "../../../lib/supabase";
+  import { getGaleriaHref } from "../../../data/site";
+  import { GALLERY_BUCKET, type Gallery, type GalleryItem } from "../../../lib/gallery";
+
+  const admin = await requireAdmin();
+  if (admin) {
+    const galleryId = new URLSearchParams(window.location.search).get("id");
+
+    const loadingState = document.getElementById("loading-state")!;
+    const notFoundState = document.getElementById("not-found-state")!;
+    const content = document.getElementById("gallery-content")!;
+
+    if (!galleryId) {
+      loadingState.classList.add("hidden");
+      notFoundState.classList.remove("hidden");
+    } else {
+      const { data: gallery } = await supabase
+        .from("galleries")
+        .select("id, slug, title, description, event_date, is_published, created_at")
+        .eq("id", galleryId)
+        .maybeSingle<Gallery>();
+
+      loadingState.classList.add("hidden");
+
+      if (!gallery) {
+        notFoundState.classList.remove("hidden");
+      } else {
+        content.classList.remove("hidden");
+
+        const titleInput = document.getElementById("title-input") as HTMLInputElement;
+        const dateInput = document.getElementById("date-input") as HTMLInputElement;
+        const descriptionInput = document.getElementById("description-input") as HTMLTextAreaElement;
+        const publishedToggle = document.getElementById("published-toggle") as HTMLInputElement;
+        const viewLink = document.getElementById("view-link") as HTMLAnchorElement;
+        const saveStatus = document.getElementById("save-status")!;
+
+        titleInput.value = gallery.title;
+        dateInput.value = gallery.event_date;
+        descriptionInput.value = gallery.description ?? "";
+        publishedToggle.checked = gallery.is_published;
+        viewLink.href = getGaleriaHref(gallery.slug);
+        viewLink.classList.remove("hidden");
+
+        let saveTimeout: ReturnType<typeof setTimeout>;
+        function scheduleSave() {
+          clearTimeout(saveTimeout);
+          saveTimeout = setTimeout(save, 600);
+        }
+
+        async function save() {
+          const { error } = await supabase
+            .from("galleries")
+            .update({
+              title: titleInput.value.trim() || gallery!.title,
+              event_date: dateInput.value,
+              description: descriptionInput.value.trim() || null,
+              is_published: publishedToggle.checked,
+            })
+            .eq("id", galleryId);
+
+          saveStatus.textContent = error ? "No se ha podido guardar: " + error.message : "Guardado.";
+          saveStatus.className = "mt-2 text-xs " + (error ? "text-red-700" : "text-navy-400");
+          saveStatus.classList.remove("hidden");
+          if (!error) setTimeout(() => saveStatus.classList.add("hidden"), 1500);
+        }
+
+        titleInput.addEventListener("input", scheduleSave);
+        dateInput.addEventListener("change", scheduleSave);
+        descriptionInput.addEventListener("input", scheduleSave);
+        publishedToggle.addEventListener("change", scheduleSave);
+
+        // --- Archivos ---
+        const itemsGrid = document.getElementById("items-grid")!;
+        const itemsEmptyState = document.getElementById("items-empty-state")!;
+        const itemTemplate = document.getElementById("item-card-template") as HTMLTemplateElement;
+
+        function publicUrl(path: string) {
+          return supabase.storage.from(GALLERY_BUCKET).getPublicUrl(path).data.publicUrl;
+        }
+
+        async function loadItems() {
+          const { data: items } = await supabase
+            .from("gallery_items")
+            .select("id, gallery_id, storage_path, media_type, position, created_at")
+            .eq("gallery_id", galleryId)
+            .order("created_at", { ascending: true });
+
+          itemsGrid.innerHTML = "";
+          const hasItems = !!items && items.length > 0;
+          itemsEmptyState.classList.toggle("hidden", hasItems);
+
+          for (const item of (items ?? []) as GalleryItem[]) {
+            const node = itemTemplate.content.cloneNode(true) as DocumentFragment;
+            const url = publicUrl(item.storage_path);
+
+            if (item.media_type === "photo") {
+              const img = node.querySelector('[data-field="thumb"]') as HTMLImageElement;
+              img.src = url;
+              img.classList.remove("hidden");
+            } else {
+              const video = node.querySelector('[data-field="video-thumb"]') as HTMLVideoElement;
+              video.src = url;
+              video.classList.remove("hidden");
+            }
+
+            const deleteButton = node.querySelector('[data-field="delete"]') as HTMLButtonElement;
+            deleteButton.addEventListener("click", async () => {
+              deleteButton.disabled = true;
+              await supabase.storage.from(GALLERY_BUCKET).remove([item.storage_path]);
+              await supabase.from("gallery_items").delete().eq("id", item.id);
+              await loadItems();
+            });
+
+            itemsGrid.appendChild(node);
+          }
+        }
+
+        await loadItems();
+
+        const fileInput = document.getElementById("file-input") as HTMLInputElement;
+        const uploadLabel = document.getElementById("upload-label")!;
+        const uploadStatus = document.getElementById("upload-status")!;
+
+        fileInput.addEventListener("change", async () => {
+          const files = Array.from(fileInput.files ?? []);
+          if (files.length === 0) return;
+
+          uploadLabel.textContent = `Subiendo 0/${files.length}...`;
+          uploadStatus.classList.add("hidden");
+
+          let uploaded = 0;
+          let failed = 0;
+
+          for (const file of files) {
+            const mediaType = file.type.startsWith("video/") ? "video" : "photo";
+            const ext = file.name.includes(".") ? file.name.split(".").pop() : mediaType === "video" ? "mp4" : "jpg";
+            const filename = `${crypto.randomUUID()}.${ext}`;
+            const path = `${galleryId}/${filename}`;
+
+            const { error: uploadError } = await supabase.storage.from(GALLERY_BUCKET).upload(path, file, {
+              contentType: file.type || undefined,
+            });
+
+            if (uploadError) {
+              failed += 1;
+            } else {
+              const { error: insertError } = await supabase
+                .from("gallery_items")
+                .insert({ gallery_id: galleryId, storage_path: path, media_type: mediaType });
+              if (insertError) failed += 1;
+            }
+
+            uploaded += 1;
+            uploadLabel.textContent = `Subiendo ${uploaded}/${files.length}...`;
+          }
+
+          uploadLabel.textContent = "Subir archivos";
+          fileInput.value = "";
+
+          if (failed > 0) {
+            uploadStatus.textContent = `${failed} archivo${failed === 1 ? "" : "s"} no se ${failed === 1 ? "pudo" : "pudieron"} subir.`;
+            uploadStatus.className = "mt-2 text-sm text-red-700";
+            uploadStatus.classList.remove("hidden");
+          }
+
+          await loadItems();
+        });
+
+        // --- Eliminar galería ---
+        const deleteGalleryButton = document.getElementById("delete-gallery-button") as HTMLButtonElement;
+        deleteGalleryButton.addEventListener("click", async () => {
+          const confirmed = window.confirm(
+            `¿Eliminar la galería "${gallery!.title}" y todas sus fotos/vídeos? Esta acción no se puede deshacer.`,
+          );
+          if (!confirmed) return;
+
+          deleteGalleryButton.disabled = true;
+
+          const { data: items } = await supabase.from("gallery_items").select("storage_path").eq("gallery_id", galleryId);
+          const paths = (items ?? []).map((i) => i.storage_path);
+          if (paths.length > 0) await supabase.storage.from(GALLERY_BUCKET).remove(paths);
+
+          const { error } = await supabase.from("galleries").delete().eq("id", galleryId);
+          if (!error) window.location.href = adminPath("/galeria");
+          else deleteGalleryButton.disabled = false;
+        });
+      }
+    }
+  }
+</script>

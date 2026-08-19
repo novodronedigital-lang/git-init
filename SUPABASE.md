@@ -684,3 +684,77 @@ Function nueva, `notify-contact`.
 A partir de ahí, cada envío del formulario de `/contacto` guarda el mensaje y, si `RESEND_API_KEY` está
 configurada, además dispara un email a hola@droneduca.com. Si no la configuras, todo sigue funcionando igual —
 simplemente no llega el aviso por correo, y los mensajes se ven igualmente en `/admin/mensajes`.
+
+## 9. Ampliación — galería de fotos y vídeo por taller
+
+Cada taller o jornada puede tener su propia galería privada: se sube desde `/admin/galeria`, y se comparte con las
+familias o el colegio mandándoles el enlace público (`droneduca.es/galeria/<slug>`) — sin necesidad de cuenta ni
+contraseña. La privacidad la da que el slug es largo y no adivinable, no un login.
+
+A diferencia del resto de tablas, `galleries`/`gallery_items` **no tienen ninguna policy de lectura pública**: la
+página pública se genera en build time con la **service-role key** (bypassa RLS), así que la anon key del navegador
+nunca puede listarlas. Ver `src/lib/supabaseAdmin.ts` y `DEPLOY.md` para el secret `SUPABASE_SERVICE_ROLE_KEY` que
+hace falta en GitHub Actions.
+
+Esta migración vive en `supabase/migrations/20260819120000_gallery.sql` (primera vez que este proyecto usa
+migraciones de verdad en vez de pegar el SQL a mano — aplícala con `supabase db push`):
+
+```sql
+create table public.galleries (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  title text not null,
+  description text,
+  event_date date not null default current_date,
+  is_published boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table public.gallery_items (
+  id uuid primary key default gen_random_uuid(),
+  gallery_id uuid not null references public.galleries(id) on delete cascade,
+  storage_path text not null,
+  media_type text not null check (media_type in ('photo', 'video')),
+  position integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index gallery_items_gallery_id_idx on public.gallery_items (gallery_id);
+
+alter table public.galleries enable row level security;
+alter table public.gallery_items enable row level security;
+
+create policy "Los admins gestionan las galerías"
+  on public.galleries for all
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy "Los admins gestionan los archivos de galería"
+  on public.gallery_items for all
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- Bucket público (lectura por URL directa, escritura solo admin)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'gallery-media', 'gallery-media', true, 209715200,
+  array['image/jpeg','image/png','image/webp','image/heic','video/mp4','video/quicktime','video/webm']
+)
+on conflict (id) do nothing;
+
+create policy "Los admins suben archivos a gallery-media"
+  on storage.objects for insert
+  with check (bucket_id = 'gallery-media' and public.is_admin());
+
+create policy "Los admins actualizan archivos de gallery-media"
+  on storage.objects for update
+  using (bucket_id = 'gallery-media' and public.is_admin())
+  with check (bucket_id = 'gallery-media' and public.is_admin());
+
+create policy "Los admins borran archivos de gallery-media"
+  on storage.objects for delete
+  using (bucket_id = 'gallery-media' and public.is_admin());
+```
+
+**Nota sobre el plan gratuito**: el plan gratuito de Supabase limita el Storage total del proyecto a 1GB. Fotos y
+sobre todo vídeo pueden llenarlo rápido — vigila el uso desde el Dashboard (Storage) y sube de plan si hace falta.

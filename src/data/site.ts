@@ -84,3 +84,8 @@ export function getContactoHref(target: string = SITE_TARGET): string {
 export function getAdminHref(): string {
   return IS_DEV ? "/admin" : `${ADMIN_URL}/`;
 }
+
+/** Href público de una galería, absoluto si estamos fuera del dominio de marketing (p. ej. desde /admin). */
+export function getGaleriaHref(slug: string): string {
+  return IS_DEV || SITE_TARGET === "marketing" ? `/galeria/${slug}` : `${MARKETING_URL}/galeria/${slug}`;
+}

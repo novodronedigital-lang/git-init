@@ -9,9 +9,11 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  /** No indexar esta página (p. ej. galerías privadas por enlace). */
+  noindex?: boolean;
 }
 
-const { title, description = SITE.description, image = "/og-image.svg" } = Astro.props;
+const { title, description = SITE.description, image = "/og-image.svg", noindex = false } = Astro.props;
 const pageTitle = title === SITE.name ? title : `${title} | ${SITE.name}`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -25,6 +27,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <title>{pageTitle}</title>
     <meta name="description" content={description} />

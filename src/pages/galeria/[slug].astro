@@ -1,0 +1,167 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getSupabaseAdmin } from "../../lib/supabaseAdmin";
+import { GALLERY_BUCKET, type Gallery, type GalleryItem } from "../../lib/gallery";
+import { SITE_TARGET } from "../../data/site";
+
+interface Props {
+  gallery: Gallery;
+  items: GalleryItem[];
+}
+
+export async function getStaticPaths() {
+  // Esta página solo se genera en el build de marketing (droneduca.es) — en los otros dos builds
+  // (formacion/admin) devolver [] evita llamadas redundantes a Supabase y no requiere la service-role key ahí.
+  if (SITE_TARGET !== "marketing") return [];
+
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) return [];
+
+  const { data: galleries } = await supabaseAdmin
+    .from("galleries")
+    .select("id, slug, title, description, event_date, is_published, created_at")
+    .eq("is_published", true);
+
+  if (!galleries || galleries.length === 0) return [];
+
+  const { data: allItems } = await supabaseAdmin
+    .from("gallery_items")
+    .select("id, gallery_id, storage_path, media_type, position, created_at")
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  return (galleries as Gallery[]).map((gallery) => ({
+    params: { slug: gallery.slug },
+    props: {
+      gallery,
+      items: ((allItems as GalleryItem[]) ?? []).filter((item) => item.gallery_id === gallery.id),
+    },
+  }));
+}
+
+const { gallery, items } = Astro.props;
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+function publicUrl(path: string) {
+  return `${supabaseUrl}/storage/v1/object/public/${GALLERY_BUCKET}/${path}`;
+}
+
+const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" });
+const formattedDate = dateFormatter.format(new Date(gallery.event_date + "T00:00:00"));
+---
+
+<Layout title={gallery.title} description={gallery.description || `Fotos y vídeos de ${gallery.title}`} noindex={true}>
+  <div class="bg-navy-950 py-12 text-white sm:py-16">
+    <div class="container-page">
+      <p class="text-xs font-bold uppercase tracking-wide text-amber-300">{formattedDate}</p>
+      <h1 class="mt-2 font-display text-3xl font-extrabold sm:text-4xl">{gallery.title}</h1>
+      {gallery.description && <p class="mt-3 max-w-2xl text-navy-200">{gallery.description}</p>}
+    </div>
+  </div>
+
+  <div class="container-page py-10 sm:py-14">
+    {
+      items.length === 0 ? (
+        <p class="rounded-2xl border border-navy-100 bg-navy-50 p-10 text-center text-navy-500">
+          Todavía no hay fotos ni vídeos en esta galería.
+        </p>
+      ) : (
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {items.map((item, index) => (
+            <button
+              type="button"
+              class="gallery-item group relative aspect-square overflow-hidden rounded-xl bg-navy-100"
+              data-index={index}
+            >
+              {item.media_type === "photo" ? (
+                <img src={publicUrl(item.storage_path)} loading="lazy" class="h-full w-full object-cover transition-transform group-hover:scale-105" alt="" />
+              ) : (
+                <>
+                  <video src={publicUrl(item.storage_path)} class="h-full w-full object-cover" muted preload="metadata" />
+                  <span class="absolute inset-0 grid place-items-center bg-navy-950/20">
+                    <span class="grid size-10 place-items-center rounded-full bg-white/90 text-navy-900">▶</span>
+                  </span>
+                </>
+              )}
+            </button>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  <div id="lightbox" class="fixed inset-0 z-[200] hidden items-center justify-center bg-navy-950/95 p-4">
+    <button id="lightbox-close" type="button" aria-label="Cerrar" class="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20">
+      ✕
+    </button>
+    <button id="lightbox-prev" type="button" aria-label="Anterior" class="absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:left-4">
+      ‹
+    </button>
+    <button id="lightbox-next" type="button" aria-label="Siguiente" class="absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:right-4">
+      ›
+    </button>
+    <div id="lightbox-content" class="max-h-[85vh] max-w-[92vw]"></div>
+  </div>
+
+  <script type="application/json" id="gallery-items-data" set:html={JSON.stringify(items.map((i) => ({ type: i.media_type, url: publicUrl(i.storage_path) })))} />
+</Layout>
+
+<script>
+  interface MediaEntry {
+    type: "photo" | "video";
+    url: string;
+  }
+
+  const items: MediaEntry[] = JSON.parse(document.getElementById("gallery-items-data")!.textContent!);
+  const lightbox = document.getElementById("lightbox")!;
+  const content = document.getElementById("lightbox-content")!;
+  let currentIndex = 0;
+
+  function render(index: number) {
+    currentIndex = (index + items.length) % items.length;
+    const item = items[currentIndex];
+    content.innerHTML = "";
+    if (item.type === "photo") {
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.className = "max-h-[85vh] max-w-[92vw] rounded-lg object-contain";
+      content.appendChild(img);
+    } else {
+      const video = document.createElement("video");
+      video.src = item.url;
+      video.controls = true;
+      video.autoplay = true;
+      video.className = "max-h-[85vh] max-w-[92vw] rounded-lg";
+      content.appendChild(video);
+    }
+  }
+
+  function open(index: number) {
+    render(index);
+    lightbox.classList.remove("hidden");
+    lightbox.classList.add("flex");
+  }
+
+  function close() {
+    lightbox.classList.add("hidden");
+    lightbox.classList.remove("flex");
+    content.innerHTML = "";
+  }
+
+  document.querySelectorAll<HTMLButtonElement>(".gallery-item").forEach((el) => {
+    el.addEventListener("click", () => open(Number(el.dataset.index)));
+  });
+
+  document.getElementById("lightbox-close")?.addEventListener("click", close);
+  document.getElementById("lightbox-prev")?.addEventListener("click", () => render(currentIndex - 1));
+  document.getElementById("lightbox-next")?.addEventListener("click", () => render(currentIndex + 1));
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (lightbox.classList.contains("hidden")) return;
+    if (e.key === "Escape") close();
+    if (e.key === "ArrowLeft") render(currentIndex - 1);
+    if (e.key === "ArrowRight") render(currentIndex + 1);
+  });
+</script>

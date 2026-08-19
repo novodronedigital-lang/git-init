@@ -32,6 +32,9 @@ jobs:
           PUBLIC_SITE_TARGET: marketing
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          # Solo este build genera /galeria/[slug] (ver getStaticPaths ahí) — necesita la service-role key
+          # para leer galleries/gallery_items, que no tienen ninguna policy de lectura pública por RLS.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Deploy marketing site
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

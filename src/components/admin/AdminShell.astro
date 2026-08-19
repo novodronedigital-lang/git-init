@@ -6,7 +6,7 @@ import { adminPath, adminHomePath } from "../../lib/admin";
 import "../../styles/global.css";
 
 interface Props {
-  active?: "dashboard" | "alumnos" | "mensajes" | "contenido" | null;
+  active?: "dashboard" | "alumnos" | "mensajes" | "contenido" | "galeria" | null;
   title: string;
   description?: string;
   /** Breadcrumb shown instead of the tabs, for pages nested under a course (lecciones/examen/calendario). */
@@ -21,6 +21,7 @@ const tabs = [
   { key: "alumnos", label: "Alumnos", href: adminPath("/alumnos") },
   { key: "mensajes", label: "Mensajes", href: adminPath("/mensajes") },
   { key: "contenido", label: "Contenido", href: adminPath("/contenido") },
+  { key: "galeria", label: "Galería", href: adminPath("/galeria") },
 ] as const;
 ---
 

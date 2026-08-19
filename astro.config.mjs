@@ -10,6 +10,8 @@ const siteTarget = process.env.PUBLIC_SITE_TARGET || 'marketing';
 
 const APP_PATH_PREFIXES = ['/cursos', '/campus', '/login', '/registro'];
 const ADMIN_PATH_PREFIX = '/admin';
+// Las galerías se comparten solo por enlace directo (no adivinable) — nunca deben aparecer en ningún sitemap.
+const GALLERY_PATH_PREFIX = '/galeria';
 
 function isAppPage(path) {
   return APP_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
@@ -19,6 +21,10 @@ function isAdminPage(path) {
   return path === ADMIN_PATH_PREFIX || path.startsWith(`${ADMIN_PATH_PREFIX}/`);
 }
 
+function isGalleryPage(path) {
+  return path === GALLERY_PATH_PREFIX || path.startsWith(`${GALLERY_PATH_PREFIX}/`);
+}
+
 // https://astro.build/config
 export default defineConfig({
   site: process.env.SITE_URL || 'https://droneduca.es',
@@ -26,6 +32,7 @@ export default defineConfig({
     sitemap({
       filter: (page) => {
         const path = new URL(page).pathname;
+        if (isGalleryPage(path)) return false;
         if (siteTarget === 'formacion') return isAppPage(path);
         if (siteTarget === 'admin') return isAdminPage(path);
         return !isAppPage(path) && !isAdminPage(path);
