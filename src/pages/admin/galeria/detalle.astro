@@ -107,7 +107,7 @@ import { adminPath } from "../../../lib/admin";
   import { requireAdmin, adminPath } from "../../../lib/admin";
   import { supabase } from "../../../lib/supabase";
   import { getGaleriaHref } from "../../../data/site";
-  import { GALLERY_BUCKET, type Gallery, type GalleryItem } from "../../../lib/gallery";
+  import { GALLERY_BUCKET, compressPhoto, type Gallery, type GalleryItem } from "../../../lib/gallery";
 
   const admin = await requireAdmin();
   if (admin) {
@@ -240,12 +240,23 @@ import { adminPath } from "../../../lib/admin";
 
           for (const file of files) {
             const mediaType = file.type.startsWith("video/") ? "video" : "photo";
-            const ext = file.name.includes(".") ? file.name.split(".").pop() : mediaType === "video" ? "mp4" : "jpg";
+
+            let uploadBlob: Blob = file;
+            let contentType = file.type || undefined;
+            let ext = file.name.includes(".") ? file.name.split(".").pop() : mediaType === "video" ? "mp4" : "jpg";
+
+            if (mediaType === "photo") {
+              const compressed = await compressPhoto(file);
+              uploadBlob = compressed.blob;
+              contentType = "image/jpeg";
+              ext = "jpg";
+            }
+
             const filename = `${crypto.randomUUID()}.${ext}`;
             const path = `${galleryId}/${filename}`;
 
-            const { error: uploadError } = await supabase.storage.from(GALLERY_BUCKET).upload(path, file, {
-              contentType: file.type || undefined,
+            const { error: uploadError } = await supabase.storage.from(GALLERY_BUCKET).upload(path, uploadBlob, {
+              contentType,
             });
 
             if (uploadError) {
