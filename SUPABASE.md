@@ -690,8 +690,10 @@ hola@droneduca.com si los 4 secrets `SMTP_*` están configurados. Si no los conf
 igual — simplemente no llega el aviso por correo (los mensajes de contacto se siguen viendo en
 `/admin/mensajes`, y las cuentas nuevas en `/admin/alumnos`).
 
-Por defecto el aviso llega a `hola@droneduca.com`, enviado desde el propio `SMTP_USER` — puedes cambiar
-cualquiera de los dos con `supabase secrets set NOTIFY_EMAIL=otra@direccion.com NOTIFY_FROM="DronEduca <web@droneduca.es>"`.
+Por defecto el aviso llega a `hola@droneduca.com` **e** `iker.luzon@droneduca.es` a la vez (se puede responder
+desde cualquiera de las dos), enviado desde el propio `SMTP_USER`. Puedes cambiar los destinatarios o el
+remitente con `supabase secrets set NOTIFY_EMAIL="uno@dominio.com,dos@dominio.com" NOTIFY_FROM="DronEduca <web@droneduca.es>"`
+(`NOTIFY_EMAIL` admite varias direcciones separadas por comas).
 
 ## 9. Ampliación — galería de fotos y vídeo por taller
 

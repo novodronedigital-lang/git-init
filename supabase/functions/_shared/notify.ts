@@ -31,7 +31,12 @@ export async function sendNotificationEmail({ subject, html, replyTo }: SendEmai
     return { ok: false, error: "Notify is not configured yet (missing SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS secrets)" };
   }
 
-  const notifyTo = Deno.env.get("NOTIFY_EMAIL") ?? "hola@droneduca.com";
+  // NOTIFY_EMAIL admite varias direcciones separadas por comas, para que el aviso llegue a más de una
+  // persona y se pueda responder desde cualquiera de ellas.
+  const notifyTo = (Deno.env.get("NOTIFY_EMAIL") ?? "hola@droneduca.com,iker.luzon@droneduca.es")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
   const fromAddress = Deno.env.get("NOTIFY_FROM") ?? user;
 
   const transport = nodemailer.createTransport({
