@@ -9,3 +9,8 @@ verify_jwt = false
 # La llama el formulario público de /contacto sin sesión — igual que arriba, tiene que ir sin
 # verificación de JWT o el preflight CORS falla para cualquier visitante no autenticado.
 verify_jwt = false
+
+[functions.notify-signup]
+# La llama /registro justo tras crear la cuenta, cuando puede que todavía no haya sesión (si Supabase
+# pide confirmar el email antes de abrir sesión) — igual que las de arriba, sin verificación de JWT.
+verify_jwt = false

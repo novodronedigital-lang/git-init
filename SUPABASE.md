@@ -663,8 +663,9 @@ create policy "Los admins actualizan los mensajes de contacto"
 ### Aviso por email a hola@droneduca.com (opcional, con Resend)
 
 Además de guardarse en la tabla (y verse en `/admin/mensajes`), puedes recibir un aviso por email cada vez que
-llega un mensaje nuevo. Esto usa [Resend](https://resend.com) (100 emails/día gratis) a través de una Edge
-Function nueva, `notify-contact`.
+llega un mensaje nuevo, **y también cada vez que alguien crea una cuenta en `/registro`**. Esto usa
+[Resend](https://resend.com) (100 emails/día gratis) a través de dos Edge Functions, `notify-contact` y
+`notify-signup` — mismo mecanismo, misma API key de Resend, cada una avisando de un evento distinto.
 
 1. Crea una cuenta gratuita en [resend.com](https://resend.com). Al registrarte con `hola@droneduca.com`, ya
    puedes enviarte emails de prueba a esa misma dirección sin verificar ningún dominio — para enviar desde una
@@ -675,15 +676,22 @@ Function nueva, `notify-contact`.
    ```bash
    supabase secrets set RESEND_API_KEY=tu_api_key_de_resend
    ```
-4. Despliega la función (sin verificación de JWT, igual que `publish`, porque la llama el propio formulario
-   público sin sesión):
+4. Despliega las dos funciones (sin verificación de JWT, igual que `publish`, porque las llaman formularios
+   públicos sin sesión garantizada):
    ```bash
    supabase functions deploy notify-contact --no-verify-jwt
+   supabase functions deploy notify-signup --no-verify-jwt
    ```
 
-A partir de ahí, cada envío del formulario de `/contacto` guarda el mensaje y, si `RESEND_API_KEY` está
-configurada, además dispara un email a hola@droneduca.com. Si no la configuras, todo sigue funcionando igual —
-simplemente no llega el aviso por correo, y los mensajes se ven igualmente en `/admin/mensajes`.
+A partir de ahí, cada envío del formulario de `/contacto` y cada alta nueva en `/registro` disparan un email a
+hola@droneduca.com si `RESEND_API_KEY` está configurada. Si no la configuras, todo sigue funcionando igual —
+simplemente no llega el aviso por correo (los mensajes de contacto se siguen viendo en `/admin/mensajes`, y las
+cuentas nuevas en `/admin/alumnos`).
+
+Por defecto el aviso llega a `hola@droneduca.com` desde `DronEduca <onboarding@resend.dev>` — puedes cambiar
+cualquiera de los dos con `supabase secrets set NOTIFY_EMAIL=... NOTIFY_FROM="DronEduca <web@droneduca.es>"` (el
+`NOTIFY_FROM` con un dominio propio como `droneduca.es` solo funciona una vez verificado ese dominio en Resend,
+paso 1 de arriba).
 
 ## 9. Ampliación — galería de fotos y vídeo por taller
 

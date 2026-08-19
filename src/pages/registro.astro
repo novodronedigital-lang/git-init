@@ -106,6 +106,7 @@ import Icon from "../components/Icon.astro";
 
 <script>
   import { signUp } from "../lib/auth";
+  import { supabase } from "../lib/supabase";
 
   const form = document.getElementById("signup-form") as HTMLFormElement | null;
   const errorBox = document.getElementById("form-error");
@@ -135,6 +136,8 @@ import Icon from "../components/Icon.astro";
       if (submitButton) submitButton.disabled = false;
       return;
     }
+
+    supabase.functions.invoke("notify-signup", { body: { fullName, email, phone } }).catch(() => {});
 
     if (data.session) {
       window.location.href = "/campus";
