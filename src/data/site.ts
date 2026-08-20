@@ -43,13 +43,28 @@ interface NavLink {
 }
 
 /**
+ * Convierte una ruta que solo existe en el dominio de marketing (p. ej. "/cookies", "/aviso-legal") en el
+ * href correcto según dónde se esté sirviendo la página actual — relativa si ya estamos en marketing,
+ * absoluta al dominio de marketing si no. Úsalo en cualquier componente compartido entre los tres
+ * subdominios (Footer, CookieBanner...) en vez de un href relativo a pelo, que solo funciona por casualidad
+ * mientras el componente solo se use en páginas de marketing.
+ */
+export function getMarketingHref(path: string, target: string = SITE_TARGET): string {
+  return IS_DEV || target === "marketing" ? path : `${MARKETING_URL}${path}`;
+}
+
+/** Href a "Mi campus" desde fuera del subdominio de formación (p. ej. el enlace "Ver campus" del admin). */
+export function getCampusHref(): string {
+  return IS_DEV ? "/campus" : `${FORMACION_URL}/campus`;
+}
+
+/**
  * Construye el nav según el subdominio actual: los enlaces que viven en el mismo dominio quedan relativos,
  * y los que cruzan a otro subdominio se vuelven absolutos. En local (astro dev) todo es siempre relativo.
  */
 export function getNavLinks(target: string = SITE_TARGET): NavLink[] {
   const cursosHref = IS_DEV || target === "formacion" ? "/cursos" : `${FORMACION_URL}/cursos`;
-
-  const marketingHref = (path: string) => (IS_DEV || target === "marketing" ? path : `${MARKETING_URL}${path}`);
+  const marketingHref = (path: string) => getMarketingHref(path, target);
 
   return [
     { label: "Inicio", href: marketingHref("/") },

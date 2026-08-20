@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Icon from "../components/Icon.astro";
+import { getMarketingHref } from "../data/site";
 ---
 
 <Layout title="Crear cuenta" description="Crea tu cuenta gratuita en el campus online de DronEduca para acceder a los cursos.">
@@ -78,9 +79,9 @@ import Icon from "../components/Icon.astro";
           />
           <span>
             He leído y acepto la
-            <a href="/privacidad" target="_blank" class="font-semibold text-sky-700 hover:underline">Política de privacidad</a>
+            <a href={getMarketingHref("/privacidad")} target="_blank" class="font-semibold text-sky-700 hover:underline">Política de privacidad</a>
             y los
-            <a href="/terminos" target="_blank" class="font-semibold text-sky-700 hover:underline">Términos de servicio</a>.
+            <a href={getMarketingHref("/terminos")} target="_blank" class="font-semibold text-sky-700 hover:underline">Términos de servicio</a>.
           </span>
         </label>
 

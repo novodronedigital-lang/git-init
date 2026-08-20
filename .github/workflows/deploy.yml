@@ -86,6 +86,8 @@ jobs:
           cp ./dist/favicon.svg ./dist-formacion/favicon.svg
           cp ./dist/apple-touch-icon.png ./dist-formacion/apple-touch-icon.png
           cp ./dist/og-image.svg ./dist-formacion/og-image.svg
+          cp ./dist/404.html ./dist-formacion/404.html
+          cp ./dist/.htaccess ./dist-formacion/.htaccess
           printf '<!doctype html><meta http-equiv="refresh" content="0; url=/cursos"><a href="/cursos">Ir a los cursos</a>' > ./dist-formacion/index.html
 
       - name: Deploy formacion.droneduca.es
@@ -107,6 +109,8 @@ jobs:
           cp ./dist/favicon.svg ./dist-admin/favicon.svg
           cp ./dist/apple-touch-icon.png ./dist-admin/apple-touch-icon.png
           cp ./dist/og-image.svg ./dist-admin/og-image.svg
+          cp ./dist/404.html ./dist-admin/404.html
+          cp ./dist/.htaccess ./dist-admin/.htaccess
           printf "User-agent: *\nDisallow: /\n" > ./dist-admin/robots.txt
 
       - name: Deploy admin.droneduca.es

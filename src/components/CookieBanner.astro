@@ -1,5 +1,8 @@
 ---
 import Icon from "./Icon.astro";
+import { getMarketingHref } from "../data/site";
+
+const cookiesHref = getMarketingHref("/cookies");
 ---
 
 <div
@@ -12,7 +15,7 @@ import Icon from "./Icon.astro";
     <p class="text-sm text-navy-600">
       Usamos únicamente cookies técnicas necesarias para que puedas iniciar sesión en el campus. No usamos
       cookies de analítica ni publicidad. Más info en nuestra
-      <a href="/cookies" class="font-semibold text-sky-700 hover:underline">política de cookies</a>.
+      <a href={cookiesHref} class="font-semibold text-sky-700 hover:underline">política de cookies</a>.
     </p>
     <div class="flex shrink-0 items-center gap-2">
       <button

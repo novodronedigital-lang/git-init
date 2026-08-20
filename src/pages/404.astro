@@ -1,0 +1,40 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+import { getHomeHref, getContactoHref } from "../data/site";
+
+const homeHref = getHomeHref();
+const contactoHref = getContactoHref();
+---
+
+<Layout title="Página no encontrada" description="Esta página no existe o se ha movido." noindex={true}>
+  <section class="flex min-h-[60vh] items-center py-16 sm:py-20">
+    <div class="container-page max-w-xl text-center">
+      <span class="mx-auto grid size-16 place-items-center rounded-full bg-sky-50 text-sky-600">
+        <Icon name="compass" class="size-8" />
+      </span>
+      <p class="mt-6 font-display text-6xl font-extrabold text-navy-900 sm:text-7xl">404</p>
+      <h1 class="mt-3 font-display text-2xl font-extrabold leading-tight text-navy-900 sm:text-3xl">
+        Esta página no existe
+      </h1>
+      <p class="mt-3 text-navy-600">
+        Puede que el enlace esté mal escrito o que la página se haya movido. Prueba a volver al inicio o
+        escríbenos si crees que es un error.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <a
+          href={homeHref}
+          class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600"
+        >
+          Volver al inicio
+        </a>
+        <a
+          href={contactoHref}
+          class="inline-flex items-center gap-2 rounded-full border border-navy-200 px-6 py-3 text-sm font-bold text-navy-700 transition-colors hover:border-sky-400 hover:text-sky-700"
+        >
+          Contactar
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -1,7 +1,7 @@
 ---
 import Icon from "../Icon.astro";
 import CookieBanner from "../CookieBanner.astro";
-import { SITE } from "../../data/site";
+import { SITE, getCampusHref } from "../../data/site";
 import { adminPath, adminHomePath } from "../../lib/admin";
 import "../../styles/global.css";
 
@@ -69,7 +69,7 @@ const tabs = [
         <div class="min-w-0 flex-1"></div>
 
         <div class="flex shrink-0 items-center gap-2.5">
-          <a href="/campus" class="hidden text-[12.5px] font-semibold text-navy-300 hover:text-white sm:inline">Ver campus →</a>
+          <a href={getCampusHref()} class="hidden text-[12.5px] font-semibold text-navy-300 hover:text-white sm:inline">Ver campus →</a>
           <span id="admin-user-name" class="hidden text-[13px] font-semibold text-navy-100 sm:inline"></span>
           <button
             id="admin-logout"
