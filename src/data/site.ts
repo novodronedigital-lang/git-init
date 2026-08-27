@@ -84,7 +84,6 @@ export function getNavLinks(target: string = SITE_TARGET): NavLink[] {
     },
     { label: "Precios", href: marketingHref("/precios") },
     { label: "Cursos online", href: cursosHref },
-    { label: "Blog", href: marketingHref("/blog") },
     { label: "Tienda de drones", href: NOVODRONE_URL, external: true },
     { label: "Contacto", href: marketingHref("/contacto") },
   ];
