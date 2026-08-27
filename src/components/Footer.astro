@@ -34,7 +34,12 @@ const homeHref = getHomeHref();
       <ul class="mt-4 space-y-2.5 text-sm">
         {navLinks.map((link) => (
           <li>
-            <a href={link.href} class="text-navy-300 transition-colors hover:text-sky-400">
+            <a
+              href={link.href}
+              target={link.external ? "_blank" : undefined}
+              rel={link.external ? "noopener noreferrer" : undefined}
+              class="text-navy-300 transition-colors hover:text-sky-400"
+            >
               {link.label}
             </a>
           </li>

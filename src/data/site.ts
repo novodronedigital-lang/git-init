@@ -13,6 +13,8 @@ export const SITE = {
 export const MARKETING_URL = "https://droneduca.es";
 export const FORMACION_URL = "https://formacion.droneduca.es";
 export const ADMIN_URL = "https://admin.droneduca.es";
+/** Tienda de la marca hermana Novodrone — sitio externo, sin relación con este proyecto. */
+export const NOVODRONE_URL = "https://novodrone.com";
 
 /**
  * Datos legales/fiscales del titular, para el Aviso Legal, la Política de Privacidad y los Términos de
@@ -39,6 +41,8 @@ const IS_DEV = import.meta.env.DEV;
 interface NavLink {
   label: string;
   href: string;
+  /** Enlace a un sitio fuera de la red de dominios de DronEduca — se abre en pestaña nueva. */
+  external?: boolean;
   children?: { label: string; href: string }[];
 }
 
@@ -81,6 +85,7 @@ export function getNavLinks(target: string = SITE_TARGET): NavLink[] {
     { label: "Precios", href: marketingHref("/precios") },
     { label: "Cursos online", href: cursosHref },
     { label: "Blog", href: marketingHref("/blog") },
+    { label: "Tienda de drones", href: NOVODRONE_URL, external: true },
     { label: "Contacto", href: marketingHref("/contacto") },
   ];
 }
