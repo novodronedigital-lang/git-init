@@ -16,8 +16,8 @@ function isActive(href: string) {
 
 <header class="sticky top-0 z-50 border-b border-navy-100 bg-white/90 backdrop-blur">
   <div class="container-page flex h-18 items-center justify-between py-3">
-    <a href={homeHref} class="flex items-center">
-      <img src="/brand/logo-lockup-on-light.png" alt={SITE.name} class="h-8 w-auto sm:h-9" />
+    <a href={homeHref} class="flex shrink-0 items-center">
+      <img src="/brand/logo-lockup-on-light.png" alt={SITE.name} class="h-8 w-auto shrink-0 sm:h-9" />
     </a>
 
     <nav class="hidden items-center gap-0.5 xl:gap-1 lg:flex">
@@ -48,8 +48,8 @@ function isActive(href: string) {
       ))}
     </nav>
 
-    <div class="hidden lg:block">
-      <a href={contactoHref} class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600">
+    <div class="hidden shrink-0 lg:block">
+      <a href={contactoHref} class="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600">
         Solicitar actividad
         <Icon name="arrow-right" class="size-4" />
       </a>
