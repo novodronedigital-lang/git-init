@@ -1,0 +1,250 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import Icon from "../../../components/Icon.astro";
+
+const inputClass =
+  "mt-1 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100";
+---
+
+<AdminShell active="talleres" title="Talleres" description="Inscripciones a talleres por enlace privado.">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="font-display text-2xl font-extrabold text-navy-900 sm:text-[26px]">Talleres</h1>
+    <p id="workshop-count" class="text-xs font-semibold text-navy-400"></p>
+  </div>
+  <p class="mt-1 max-w-2xl text-[13.5px] text-navy-500">
+    Crea un taller, copia su enlace de inscripción y compártelo (WhatsApp, ayuntamiento, cartel con QR...). La página
+    no aparece en ningún menú ni en Google: solo entra quien tiene el enlace.
+  </p>
+
+  <div class="mt-6 max-w-3xl rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+    <h2 class="font-display text-base font-bold text-navy-900">Nuevo taller</h2>
+    <form id="new-workshop-form" class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label for="w-title" class="text-xs font-bold text-navy-500">Título</label>
+        <input id="w-title" type="text" required placeholder="Ej. Taller de drones en Utebo" class={inputClass} />
+      </div>
+      <div>
+        <label for="w-town" class="text-xs font-bold text-navy-500">Pueblo / ciudad</label>
+        <input id="w-town" type="text" required placeholder="Utebo" class={inputClass} />
+      </div>
+      <div>
+        <label for="w-location" class="text-xs font-bold text-navy-500">Lugar (opcional)</label>
+        <input id="w-location" type="text" placeholder="Pabellón municipal" class={inputClass} />
+      </div>
+      <div>
+        <label for="w-date" class="text-xs font-bold text-navy-500">Fecha</label>
+        <input id="w-date" type="date" required class={inputClass} />
+      </div>
+      <div>
+        <label for="w-time" class="text-xs font-bold text-navy-500">Horario (opcional)</label>
+        <input id="w-time" type="text" placeholder="De 11:00 a 13:00" class={inputClass} />
+      </div>
+      <div>
+        <label for="w-code" class="text-xs font-bold text-navy-500">Código de descuento</label>
+        <input id="w-code" type="text" placeholder="UTEBO10" class={`${inputClass} uppercase`} />
+        <p class="mt-1 text-[11px] text-navy-400">Se rellena solo con el pueblo. Recuerda darlo de alta en la tienda.</p>
+      </div>
+      <div class="sm:col-span-2">
+        <label for="w-description" class="text-xs font-bold text-navy-500">Descripción para las familias (opcional)</label>
+        <textarea id="w-description" rows="3" placeholder="Qué vamos a hacer, qué traer, edades recomendadas..." class={inputClass}></textarea>
+      </div>
+      <div class="sm:col-span-2">
+        <button
+          type="submit"
+          class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Crear taller
+        </button>
+        <p id="new-workshop-status" class="mt-3 hidden text-sm"></p>
+      </div>
+    </form>
+  </div>
+
+  <div class="mt-8 max-w-3xl">
+    <p id="loading-state" class="text-sm text-navy-500">Cargando talleres...</p>
+    <p id="error-state" class="hidden rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700"></p>
+    <p id="empty-state" class="hidden rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+      Todavía no has creado ningún taller.
+    </p>
+    <div id="workshops-list" class="hidden space-y-3"></div>
+  </div>
+
+  <template id="workshop-card-template">
+    <div class="rounded-2xl border border-navy-100 bg-white p-5">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <a data-field="detail-link" class="min-w-0">
+          <p class="font-display text-base font-bold text-navy-900 hover:text-sky-700" data-field="title"></p>
+          <p class="text-xs text-navy-500" data-field="meta"></p>
+        </a>
+        <span data-field="status-badge" class="shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"></span>
+      </div>
+      <p class="mt-3 text-sm font-semibold text-navy-700" data-field="counts"></p>
+
+      <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-navy-50 pt-3">
+        <a data-field="detail-button" class="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3.5 py-1.5 text-xs font-bold text-sky-700 hover:bg-sky-100">
+          <Icon name="users" class="size-3.5" />
+          Ver inscritos y enviar correo
+        </a>
+        <button type="button" data-field="copy-link"
+          class="inline-flex items-center gap-1.5 rounded-full border border-navy-200 px-3.5 py-1.5 text-xs font-bold text-navy-500 hover:border-sky-400 hover:text-sky-700">
+          Copiar enlace de inscripción
+        </button>
+      </div>
+    </div>
+  </template>
+</AdminShell>
+
+<script>
+  import { requireAdmin, adminPath } from "../../../lib/admin";
+  import { supabase } from "../../../lib/supabase";
+  import { getInscripcionHref } from "../../../data/site";
+  import { generateGallerySlug } from "../../../lib/gallery";
+
+  interface Workshop {
+    id: string;
+    slug: string;
+    title: string;
+    town: string;
+    event_date: string;
+    is_open: boolean;
+    followup_sent_at: string | null;
+  }
+
+  function codeFromTown(town: string): string {
+    const base = town
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .toUpperCase();
+    return base ? `${base}10` : "";
+  }
+
+  const admin = await requireAdmin();
+  if (admin) {
+    const loadingState = document.getElementById("loading-state")!;
+    const errorState = document.getElementById("error-state")!;
+    const emptyState = document.getElementById("empty-state")!;
+    const list = document.getElementById("workshops-list")!;
+    const countEl = document.getElementById("workshop-count")!;
+    const template = document.getElementById("workshop-card-template") as HTMLTemplateElement;
+    const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", year: "numeric" });
+
+    async function load() {
+      const [{ data: workshops, error }, { data: regs }] = await Promise.all([
+        supabase.from("workshops").select("id, slug, title, town, event_date, is_open, followup_sent_at").order("event_date", { ascending: false }),
+        supabase.from("workshop_registrations").select("workshop_id, workshop_attendees(count)"),
+      ]);
+
+      loadingState.classList.add("hidden");
+      list.innerHTML = "";
+
+      if (error) {
+        errorState.textContent = "No se han podido cargar los talleres: " + error.message;
+        errorState.classList.remove("hidden");
+        return;
+      }
+      if (!workshops || workshops.length === 0) {
+        emptyState.classList.remove("hidden");
+        list.classList.add("hidden");
+        countEl.textContent = "";
+        return;
+      }
+
+      const stats = new Map<string, { families: number; people: number }>();
+      for (const r of (regs ?? []) as { workshop_id: string; workshop_attendees: { count: number }[] }[]) {
+        const s = stats.get(r.workshop_id) ?? { families: 0, people: 0 };
+        s.families += 1;
+        s.people += r.workshop_attendees?.[0]?.count ?? 0;
+        stats.set(r.workshop_id, s);
+      }
+
+      emptyState.classList.add("hidden");
+      list.classList.remove("hidden");
+      countEl.textContent = `${workshops.length} taller${workshops.length === 1 ? "" : "es"}`;
+
+      for (const w of workshops as Workshop[]) {
+        const node = template.content.cloneNode(true) as DocumentFragment;
+        const detailHref = adminPath(`/talleres/detalle?id=${w.id}`);
+        node.querySelector('[data-field="title"]')!.textContent = w.title;
+        node.querySelector('[data-field="meta"]')!.textContent =
+          `${w.town} · ${dateFormatter.format(new Date(w.event_date + "T00:00:00"))}`;
+        (node.querySelector('[data-field="detail-link"]') as HTMLAnchorElement).href = detailHref;
+        (node.querySelector('[data-field="detail-button"]') as HTMLAnchorElement).href = detailHref;
+
+        const s = stats.get(w.id) ?? { families: 0, people: 0 };
+        node.querySelector('[data-field="counts"]')!.textContent =
+          `${s.people} persona${s.people === 1 ? "" : "s"} · ${s.families} inscripci${s.families === 1 ? "ón" : "ones"}`;
+
+        const badge = node.querySelector('[data-field="status-badge"]') as HTMLElement;
+        if (w.followup_sent_at) {
+          badge.textContent = "Correo enviado";
+          badge.classList.add("bg-sky-50", "text-sky-700");
+        } else if (w.is_open) {
+          badge.textContent = "Inscripción abierta";
+          badge.classList.add("bg-amber-100", "text-amber-700");
+        } else {
+          badge.textContent = "Cerrada";
+          badge.classList.add("bg-navy-100", "text-navy-500");
+        }
+
+        const copyButton = node.querySelector('[data-field="copy-link"]') as HTMLButtonElement;
+        copyButton.addEventListener("click", async () => {
+          const url = getInscripcionHref(w.slug);
+          await navigator.clipboard.writeText(url.startsWith("http") ? url : `${window.location.origin}${url}`);
+          const original = copyButton.textContent;
+          copyButton.textContent = "¡Copiado!";
+          setTimeout(() => (copyButton.textContent = original), 1500);
+        });
+
+        list.appendChild(node);
+      }
+    }
+
+    await load();
+
+    const form = document.getElementById("new-workshop-form") as HTMLFormElement;
+    const townInput = document.getElementById("w-town") as HTMLInputElement;
+    const codeInput = document.getElementById("w-code") as HTMLInputElement;
+    const status = document.getElementById("new-workshop-status")!;
+    let codeEditedByHand = false;
+
+    codeInput.addEventListener("input", () => (codeEditedByHand = codeInput.value.trim() !== ""));
+    townInput.addEventListener("input", () => {
+      if (!codeEditedByHand) codeInput.value = codeFromTown(townInput.value);
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const value = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim();
+      const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+      submitButton.disabled = true;
+      status.classList.add("hidden");
+
+      const { error } = await supabase.from("workshops").insert({
+        slug: generateGallerySlug(value("w-title")),
+        title: value("w-title"),
+        town: value("w-town"),
+        location: value("w-location") || null,
+        event_date: value("w-date"),
+        event_time: value("w-time") || null,
+        description: value("w-description") || null,
+        discount_code: value("w-code").toUpperCase() || null,
+      });
+
+      submitButton.disabled = false;
+      if (error) {
+        status.textContent = "No se ha podido crear: " + error.message;
+        status.className = "mt-3 text-sm text-red-700";
+        return;
+      }
+
+      form.reset();
+      codeEditedByHand = false;
+      status.textContent = "Taller creado. Copia su enlace de inscripción en la lista de abajo.";
+      status.className = "mt-3 text-sm text-sky-700";
+      await load();
+    });
+  }
+</script>

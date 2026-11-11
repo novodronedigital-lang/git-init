@@ -21,8 +21,11 @@ function isAdminPage(path) {
   return path === ADMIN_PATH_PREFIX || path.startsWith(`${ADMIN_PATH_PREFIX}/`);
 }
 
+// Igual que las galerías: la inscripción a talleres y la baja de correos solo se abren por enlace directo.
+const PRIVATE_LINK_PREFIXES = [GALLERY_PATH_PREFIX, '/inscripcion', '/baja'];
+
 function isGalleryPage(path) {
-  return path === GALLERY_PATH_PREFIX || path.startsWith(`${GALLERY_PATH_PREFIX}/`);
+  return PRIVATE_LINK_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }
 
 // https://astro.build/config

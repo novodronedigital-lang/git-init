@@ -768,3 +768,71 @@ create policy "Los admins borran archivos de gallery-media"
 
 **Nota sobre el plan gratuito**: el plan gratuito de Supabase limita el Storage total del proyecto a 1GB. Fotos y
 sobre todo vídeo pueden llenarlo rápido — vigila el uso desde el Dashboard (Storage) y sube de plan si hace falta.
+
+## 10. Ampliación — inscripción a talleres y correo de valoración con descuento
+
+Cada taller (en un pueblo, ayuntamiento, entidad...) tiene una página de inscripción **oculta**
+(`droneduca.es/inscripcion?t=<slug>`): no sale en ningún menú, ni en el sitemap, y lleva `noindex`. Solo entra
+quien tiene el enlace. Se crea y se gestiona desde **/admin → Talleres**.
+
+- El formulario pide los datos de contacto del adulto (nombre, email, teléfono) y, con "Añadir otra persona",
+  el nombre y la edad de cada participante (sin datos de contacto, pueden ser menores).
+- Casilla **obligatoria**: política de privacidad + declarar ser madre/padre/tutor de los menores inscritos.
+- Casilla **opcional y sin marcar**: recibir el resumen del taller, el cupón de 10€ y novedades. Tiene que
+  seguir siendo así (separada, opcional, sin premarcar): es lo que exige el RGPD y el art. 21 LSSI para poder
+  enviar correos comerciales. Un consentimiento "escondido" o premarcado no es válido.
+- Desde la ficha del taller en el admin: ver inscritos, descargar un CSV para Excel, abrir/cerrar la
+  inscripción, cambiar el código de descuento, enviarte una **prueba** del correo y **enviarlo a todos** los que
+  dieron consentimiento. Cada persona lo recibe una sola vez y cada correo lleva su enlace de baja.
+
+La migración está en `supabase/migrations/20261111120000_workshops.sql`. Nada de esto tiene lectura pública: el
+formulario usa funciones `security definer` (`get_open_workshop`, `register_for_workshop`,
+`unsubscribe_workshop_email`) que solo dejan ver un taller abierto por su slug, inscribirse, o darse de baja.
+
+### Puesta en marcha
+
+1. Inicia sesión en el CLI si hace falta (`supabase login`) y aplica la migración:
+   ```bash
+   supabase db push
+   ```
+   (O pega el contenido del archivo en el SQL Editor.)
+2. Despliega las dos funciones nuevas:
+   ```bash
+   supabase functions deploy send-workshop-followup --no-verify-jwt
+   supabase functions deploy email-unsubscribe --no-verify-jwt
+   ```
+3. Configura el envío de correo (sección "Envío de correo" abajo) si no lo has hecho ya.
+4. Lanza el workflow / "Publicar cambios" para que salgan `/inscripcion`, `/baja` y la pestaña Talleres.
+
+### Envío de correo (y que no llegue a spam)
+
+Se envía por SMTP desde un buzón de vuestro propio hosting (Sered), igual que los avisos del formulario de
+contacto. Para que los correos lleguen a la bandeja de entrada y no a spam:
+
+1. **Buzón dedicado**: crea en cPanel (Sered) un buzón tipo `hola@droneduca.es` o `talleres@droneduca.es`. Que sea
+   del mismo dominio que la web, nunca un Gmail.
+2. **Secrets** (en tu terminal, nunca en un chat):
+   ```bash
+   supabase secrets set SMTP_HOST=mail.droneduca.es SMTP_PORT=465 SMTP_USER=talleres@droneduca.es SMTP_PASS=la_contraseña_del_buzon
+   supabase secrets set MARKETING_FROM="DronEduca <talleres@droneduca.es>"
+   ```
+   Opcionales: `STORE_URL` (tienda del botón del correo, por defecto `https://novodrone.com`) y `PUBLIC_SITE_URL`
+   (por defecto `https://droneduca.es`).
+3. **DNS** (en cPanel de Sered → "Email Deliverability" / "Entregabilidad del correo", que lo hace casi solo):
+   - **SPF**: un registro TXT en `droneduca.es` del tipo `v=spf1 +a +mx include:<el que indique Sered> ~all`.
+     Solo puede haber UN registro SPF; si ya existe, se amplía, no se duplica.
+   - **DKIM**: pulsa "Instalar/Reparar" en Email Deliverability; cPanel genera la clave y el TXT
+     `default._domainkey.droneduca.es`.
+   - **DMARC**: un TXT en `_dmarc.droneduca.es` con, para empezar,
+     `v=DMARC1; p=none; rua=mailto:hola@droneduca.com`. Tras unas semanas sin problemas se puede subir a
+     `p=quarantine`.
+   Puedes comprobarlo mandándote la prueba desde el admin a una dirección de [mail-tester.com](https://www.mail-tester.com)
+   (objetivo: 9/10 o más).
+4. **Buenas prácticas** que ya hace el código: un correo por persona (nunca en copia oculta masiva), versión en
+   texto plano además del HTML, cabeceras `List-Unsubscribe` de baja en un clic (Gmail y Yahoo las exigen),
+   una pausa entre envíos, `Reply-To` a hola@droneduca.com, datos de la empresa y motivo del envío en el pie,
+   y solo a quien dio su consentimiento. Para lo que hacéis (decenas o pocos cientos de correos por taller) esto
+   es suficiente; si algún día se envían miles a la vez, conviene pasar a un servicio de envío profesional.
+
+**Los códigos de descuento** (UTEBO10, CADRETE10...) hay que darlos de alta a mano en la tienda de Novodrone
+antes de enviar el correo: la web solo los muestra.

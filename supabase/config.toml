@@ -14,3 +14,12 @@ verify_jwt = false
 # La llama /registro justo tras crear la cuenta, cuando puede que todavía no haya sesión (si Supabase
 # pide confirmar el email antes de abrir sesión) — igual que las de arriba, sin verificación de JWT.
 verify_jwt = false
+
+[functions.send-workshop-followup]
+# Comprueba por su cuenta que quien llama es admin (igual que publish); sin verify_jwt para no romper el
+# preflight CORS desde el panel de admin.
+verify_jwt = false
+
+[functions.email-unsubscribe]
+# Baja de un clic desde Gmail/Outlook (cabecera List-Unsubscribe): llega sin sesión, el token es la credencial.
+verify_jwt = false

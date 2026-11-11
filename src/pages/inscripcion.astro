@@ -1,0 +1,238 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Icon from "../components/Icon.astro";
+---
+
+<Layout
+  title="Inscripción al taller"
+  description="Inscríbete en el taller de drones de DronEduca."
+  noindex
+>
+  <section class="bg-sky-50/60 py-14 sm:py-16">
+    <div class="container-page text-center">
+      <span class="inline-block rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-sky-700 shadow-sm ring-1 ring-sky-100">
+        Taller de drones · Gratuito
+      </span>
+      <h1 id="workshop-title" class="mx-auto mt-4 max-w-2xl font-display text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl">
+        Inscripción al taller
+      </h1>
+      <p id="workshop-meta" class="mx-auto mt-3 hidden max-w-xl text-base font-semibold text-sky-700"></p>
+      <p id="workshop-description" class="mx-auto mt-3 hidden max-w-xl whitespace-pre-line text-navy-600"></p>
+    </div>
+  </section>
+
+  <section class="py-12 sm:py-16">
+    <div class="container-page max-w-2xl">
+      <p id="loading-state" class="text-center text-sm text-navy-500">Cargando el taller...</p>
+      <div id="closed-state" class="hidden rounded-2xl border border-navy-100 bg-white p-8 text-center text-navy-600">
+        Este enlace no corresponde a ningún taller abierto, o las inscripciones ya están cerradas. Si crees que es un
+        error, escríbenos a <a href="mailto:hola@droneduca.com" class="font-semibold text-sky-700 hover:underline">hola@droneduca.com</a>.
+      </div>
+
+      <div id="success-state" class="hidden rounded-2xl border border-sky-200 bg-sky-50 p-8 text-center">
+        <span class="mx-auto grid size-12 place-items-center rounded-full bg-sky-600 text-white">
+          <Icon name="check" class="size-6" />
+        </span>
+        <h2 class="mt-4 font-display text-2xl font-extrabold text-navy-900">¡Inscripción hecha!</h2>
+        <p class="mt-2 text-navy-600">Os esperamos en el taller. Si necesitáis cambiar algo, escribidnos a hola@droneduca.com.</p>
+      </div>
+
+      <form id="signup-form" class="hidden space-y-6" novalidate>
+        <div class="rounded-2xl border border-navy-100 bg-white p-6 shadow-sm sm:p-8">
+          <h2 class="font-display text-lg font-bold text-navy-900">Datos de contacto</h2>
+          <p class="mt-1 text-sm text-navy-500">La persona adulta responsable de la inscripción.</p>
+          <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label for="contact-name" class="text-sm font-semibold text-navy-800">Nombre y apellidos</label>
+              <input id="contact-name" name="contact-name" type="text" required autocomplete="name" maxlength="120"
+                class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" />
+            </div>
+            <div>
+              <label for="email" class="text-sm font-semibold text-navy-800">Email</label>
+              <input id="email" name="email" type="email" required autocomplete="email" maxlength="200"
+                class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" />
+            </div>
+            <div>
+              <label for="phone" class="text-sm font-semibold text-navy-800">Teléfono</label>
+              <input id="phone" name="phone" type="tel" required autocomplete="tel" maxlength="40" placeholder="600 000 000"
+                class="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" />
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-navy-100 bg-white p-6 shadow-sm sm:p-8">
+          <h2 class="font-display text-lg font-bold text-navy-900">¿Quién viene al taller?</h2>
+          <p class="mt-1 text-sm text-navy-500">Añade a cada persona que va a participar, de cualquier edad (tú también, si participas).</p>
+
+          <div id="attendees" class="mt-5 space-y-3"></div>
+
+          <button id="add-attendee" type="button"
+            class="mt-4 inline-flex items-center gap-2 rounded-full border border-navy-200 px-5 py-2.5 text-sm font-bold text-navy-700 transition-colors hover:border-sky-400 hover:text-sky-700">
+            + Añadir otra persona
+          </button>
+        </div>
+
+        <div class="space-y-4 rounded-2xl border border-navy-100 bg-white p-6 shadow-sm sm:p-8">
+          <label class="flex items-start gap-3 text-sm text-navy-700">
+            <input id="privacy" type="checkbox" required class="mt-0.5 size-4 shrink-0 rounded border-navy-300 accent-sky-600" />
+            <span>
+              <strong>(Obligatorio)</strong> He leído y acepto la{" "}
+              <a href="/privacidad" target="_blank" class="font-semibold text-sky-700 hover:underline">política de privacidad</a>.
+              Soy mayor de edad y, si inscribo a menores, soy su madre, padre o tutor legal y autorizo el uso de sus datos para gestionar esta inscripción.
+            </span>
+          </label>
+
+          <label class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm text-navy-700">
+            <input id="marketing" type="checkbox" class="mt-0.5 size-4 shrink-0 rounded border-navy-300 accent-amber-500" />
+            <span>
+              <strong>(Opcional)</strong> Quiero recibir por email el resumen del taller, un
+              <strong>cupón de 10€ de descuento</strong> en la tienda de Novodrone y futuras novedades y ofertas de DronEduca y Novodrone.
+              Puedo darme de baja en cualquier momento desde el propio email.
+            </span>
+          </label>
+        </div>
+
+        <p id="form-error" class="hidden rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert"></p>
+
+        <button type="submit"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-amber-500/30 transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60">
+          Confirmar inscripción
+          <Icon name="arrow-right" class="size-4" />
+        </button>
+
+        <p class="text-center text-xs text-navy-400">
+          Responsable: SJM TECH S.COOP (DronEduca). Finalidad: gestionar tu inscripción y, solo si marcas la casilla opcional, enviarte comunicaciones comerciales.
+          Puedes ejercer tus derechos en hola@droneduca.com. Más información en la <a href="/privacidad" target="_blank" class="underline">política de privacidad</a>.
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <template id="attendee-template">
+    <div class="flex items-end gap-3 rounded-xl border border-navy-100 p-3" data-attendee>
+      <div class="min-w-0 flex-1">
+        <label class="text-xs font-bold text-navy-500" data-label></label>
+        <input type="text" required maxlength="120" placeholder="Nombre" data-name
+          class="mt-1 w-full rounded-lg border border-navy-200 px-3 py-2 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" />
+      </div>
+      <div class="w-24 shrink-0">
+        <label class="text-xs font-bold text-navy-500">Edad</label>
+        <input type="number" required min="0" max="120" inputmode="numeric" placeholder="Años" data-age
+          class="mt-1 w-full rounded-lg border border-navy-200 px-3 py-2 text-sm text-navy-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" />
+      </div>
+      <button type="button" data-remove aria-label="Quitar persona"
+        class="mb-1 grid size-8 shrink-0 place-items-center rounded-full text-navy-400 hover:bg-red-50 hover:text-red-600">
+        ✕
+      </button>
+    </div>
+  </template>
+</Layout>
+
+<script>
+  import { supabase } from "../lib/supabase";
+
+  const MAX_ATTENDEES = 15;
+  const slug = new URLSearchParams(window.location.search).get("t") ?? "";
+
+  const loadingState = document.getElementById("loading-state")!;
+  const closedState = document.getElementById("closed-state")!;
+  const successState = document.getElementById("success-state")!;
+  const form = document.getElementById("signup-form") as HTMLFormElement;
+  const attendeesEl = document.getElementById("attendees")!;
+  const addButton = document.getElementById("add-attendee") as HTMLButtonElement;
+  const template = document.getElementById("attendee-template") as HTMLTemplateElement;
+  const errorBox = document.getElementById("form-error")!;
+
+  function renumber() {
+    const rows = attendeesEl.querySelectorAll<HTMLElement>("[data-attendee]");
+    rows.forEach((row, i) => {
+      row.querySelector("[data-label]")!.textContent = `Persona ${i + 1}`;
+      (row.querySelector("[data-remove]") as HTMLButtonElement).classList.toggle("invisible", rows.length === 1);
+    });
+    addButton.classList.toggle("hidden", rows.length >= MAX_ATTENDEES);
+  }
+
+  function addAttendee() {
+    const node = template.content.cloneNode(true) as DocumentFragment;
+    const row = node.querySelector("[data-attendee]") as HTMLElement;
+    row.querySelector("[data-remove]")!.addEventListener("click", () => {
+      row.remove();
+      renumber();
+    });
+    attendeesEl.appendChild(node);
+    renumber();
+  }
+
+  addButton.addEventListener("click", () => {
+    addAttendee();
+    const inputs = attendeesEl.querySelectorAll<HTMLInputElement>("[data-name]");
+    inputs[inputs.length - 1]?.focus();
+  });
+
+  const dateFormatter = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" });
+
+  const { data, error } = slug ? await supabase.rpc("get_open_workshop", { p_slug: slug }) : { data: null, error: null };
+  const workshop = !error && Array.isArray(data) ? data[0] : null;
+
+  loadingState.classList.add("hidden");
+
+  if (!workshop) {
+    closedState.classList.remove("hidden");
+  } else {
+    document.getElementById("workshop-title")!.textContent = workshop.title;
+    document.title = `${workshop.title} | DronEduca`;
+
+    const metaParts = [
+      dateFormatter.format(new Date(workshop.event_date + "T00:00:00")),
+      workshop.event_time,
+      workshop.location ? `${workshop.location}, ${workshop.town}` : workshop.town,
+    ].filter(Boolean);
+    const metaEl = document.getElementById("workshop-meta")!;
+    metaEl.textContent = metaParts.join(" · ");
+    metaEl.classList.remove("hidden");
+
+    if (workshop.description) {
+      const descEl = document.getElementById("workshop-description")!;
+      descEl.textContent = workshop.description;
+      descEl.classList.remove("hidden");
+    }
+
+    addAttendee();
+    form.classList.remove("hidden");
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    errorBox.classList.add("hidden");
+    if (!form.reportValidity()) return;
+
+    const attendees = Array.from(attendeesEl.querySelectorAll<HTMLElement>("[data-attendee]")).map((row) => ({
+      name: (row.querySelector("[data-name]") as HTMLInputElement).value.trim(),
+      age: Number((row.querySelector("[data-age]") as HTMLInputElement).value),
+    }));
+
+    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    submitButton.disabled = true;
+
+    const { error } = await supabase.rpc("register_for_workshop", {
+      p_slug: slug,
+      p_contact_name: (document.getElementById("contact-name") as HTMLInputElement).value,
+      p_email: (document.getElementById("email") as HTMLInputElement).value,
+      p_phone: (document.getElementById("phone") as HTMLInputElement).value,
+      p_privacy_accepted: (document.getElementById("privacy") as HTMLInputElement).checked,
+      p_marketing_consent: (document.getElementById("marketing") as HTMLInputElement).checked,
+      p_attendees: attendees,
+    });
+
+    if (error) {
+      errorBox.textContent = "No se ha podido completar la inscripción: " + error.message;
+      errorBox.classList.remove("hidden");
+      submitButton.disabled = false;
+      return;
+    }
+
+    form.classList.add("hidden");
+    successState.classList.remove("hidden");
+    successState.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+</script>

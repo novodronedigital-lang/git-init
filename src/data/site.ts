@@ -108,3 +108,9 @@ export function getAdminHref(): string {
 export function getGaleriaHref(slug: string): string {
   return IS_DEV || SITE_TARGET === "marketing" ? `/galeria/${slug}` : `${MARKETING_URL}/galeria/${slug}`;
 }
+
+/** Enlace privado de inscripción a un taller, para copiarlo desde el admin y mandarlo por WhatsApp, etc. */
+export function getInscripcionHref(slug: string): string {
+  const path = `/inscripcion?t=${encodeURIComponent(slug)}`;
+  return IS_DEV || SITE_TARGET === "marketing" ? path : `${MARKETING_URL}${path}`;
+}

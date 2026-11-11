@@ -1,0 +1,341 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import { adminPath } from "../../../lib/admin";
+
+const pill =
+  "inline-flex items-center gap-1.5 rounded-full border border-navy-200 px-3.5 py-1.5 text-xs font-bold text-navy-600 hover:border-sky-400 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50";
+---
+
+<AdminShell
+  active="talleres"
+  title="Taller"
+  description="Inscritos del taller y correo de valoración."
+  back={{ href: adminPath("/talleres"), label: "Talleres" }}
+>
+  <p id="loading-state" class="text-sm text-navy-500">Cargando taller...</p>
+  <p id="not-found-state" class="hidden rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+    No se ha encontrado este taller.
+  </p>
+
+  <div id="content" class="hidden max-w-4xl">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h1 id="title" class="font-display text-2xl font-extrabold text-navy-900 sm:text-[26px]"></h1>
+        <p id="meta" class="mt-1 text-sm text-navy-500"></p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="copy-link" type="button" class={pill}>Copiar enlace de inscripción</button>
+        <a id="open-link" target="_blank" rel="noopener" class={pill}>Ver formulario →</a>
+      </div>
+    </div>
+
+    <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-navy-100 bg-white p-4">
+      <label class="flex items-center gap-2 text-sm font-bold text-navy-700">
+        <input id="open-toggle" type="checkbox" class="size-4 rounded border-navy-300 accent-sky-600" />
+        Inscripción abierta
+      </label>
+      <label class="flex items-center gap-2 text-sm font-bold text-navy-700">
+        Código de descuento
+        <input id="code-input" type="text" class="w-36 rounded-lg border border-navy-200 px-3 py-1.5 text-sm uppercase outline-none focus:border-sky-500" />
+      </label>
+      <button id="delete-workshop" type="button" class="ml-auto text-xs font-bold text-navy-400 hover:text-red-600">Eliminar taller</button>
+      <p id="save-status" class="hidden w-full text-xs"></p>
+    </div>
+
+    <!-- Correo de valoración -->
+    <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+      <h2 class="font-display text-lg font-bold text-navy-900">Correo "¿Qué te ha parecido el taller?"</h2>
+      <p class="mt-1 text-sm text-navy-600">
+        Se envía <strong>solo</strong> a quien marcó la casilla de recibir comunicaciones y no se ha dado de baja, con el
+        código de descuento de este taller y el "Powered by Novodrone". Cada persona lo recibe una sola vez, aunque pulses el botón más de una vez.
+      </p>
+      <p id="followup-summary" class="mt-3 text-sm font-semibold text-navy-800"></p>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <input id="test-email" type="email" placeholder="tu@email.com" class="w-56 rounded-full border border-navy-200 bg-white px-4 py-2 text-sm outline-none focus:border-sky-500" />
+        <button id="send-test" type="button" class={`${pill} bg-white`}>Enviarme una prueba</button>
+        <button id="send-followup" type="button"
+          class="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2 text-sm font-bold text-white shadow-md shadow-amber-500/30 hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">
+          Enviar a todos
+        </button>
+      </div>
+      <p id="followup-status" class="mt-3 hidden text-sm"></p>
+    </div>
+
+    <!-- Inscritos -->
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="font-display text-lg font-bold text-navy-900">Inscritos</h2>
+      <button id="export-csv" type="button" class={pill}>Descargar Excel (CSV)</button>
+    </div>
+    <p id="regs-empty" class="mt-3 hidden rounded-2xl border border-navy-100 bg-white p-6 text-center text-sm text-navy-500">
+      Todavía no se ha inscrito nadie.
+    </p>
+    <div id="regs-list" class="mt-3 space-y-3"></div>
+  </div>
+</AdminShell>
+
+<script>
+  import { requireAdmin, adminPath } from "../../../lib/admin";
+  import { supabase } from "../../../lib/supabase";
+  import { getInscripcionHref } from "../../../data/site";
+
+  interface Attendee {
+    name: string;
+    age: number;
+    position: number;
+  }
+  interface Registration {
+    id: string;
+    created_at: string;
+    contact_name: string;
+    email: string;
+    phone: string;
+    marketing_consent: boolean;
+    unsubscribed_at: string | null;
+    followup_sent_at: string | null;
+    workshop_attendees: Attendee[];
+  }
+
+  const admin = await requireAdmin();
+  const id = new URLSearchParams(window.location.search).get("id");
+
+  if (admin) {
+    const loading = document.getElementById("loading-state")!;
+    const notFound = document.getElementById("not-found-state")!;
+
+    const { data: workshop } = id
+      ? await supabase.from("workshops").select("*").eq("id", id).maybeSingle()
+      : { data: null };
+
+    loading.classList.add("hidden");
+
+    if (!workshop) {
+      notFound.classList.remove("hidden");
+    } else {
+      document.getElementById("content")!.classList.remove("hidden");
+      const dateFormatter = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      const shortDate = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+      document.getElementById("title")!.textContent = workshop.title;
+      document.getElementById("meta")!.textContent = [
+        workshop.town,
+        workshop.location,
+        dateFormatter.format(new Date(workshop.event_date + "T00:00:00")),
+        workshop.event_time,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+
+      const relLink = getInscripcionHref(workshop.slug);
+      const absLink = relLink.startsWith("http") ? relLink : `${window.location.origin}${relLink}`;
+      (document.getElementById("open-link") as HTMLAnchorElement).href = absLink;
+      const copyBtn = document.getElementById("copy-link") as HTMLButtonElement;
+      copyBtn.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(absLink);
+        copyBtn.textContent = "¡Copiado!";
+        setTimeout(() => (copyBtn.textContent = "Copiar enlace de inscripción"), 1500);
+      });
+
+      // --- Ajustes del taller ---
+      const saveStatus = document.getElementById("save-status")!;
+      async function save(patch: Record<string, unknown>) {
+        const { error } = await supabase.from("workshops").update(patch).eq("id", workshop.id);
+        saveStatus.textContent = error ? "No se ha podido guardar: " + error.message : "Guardado.";
+        saveStatus.className = `w-full text-xs ${error ? "text-red-700" : "text-sky-700"}`;
+        setTimeout(() => saveStatus.classList.add("hidden"), 2000);
+      }
+
+      const openToggle = document.getElementById("open-toggle") as HTMLInputElement;
+      openToggle.checked = workshop.is_open;
+      openToggle.addEventListener("change", () => save({ is_open: openToggle.checked }));
+
+      const codeInput = document.getElementById("code-input") as HTMLInputElement;
+      codeInput.value = workshop.discount_code ?? "";
+      codeInput.addEventListener("change", () => {
+        workshop.discount_code = codeInput.value.trim().toUpperCase() || null;
+        codeInput.value = workshop.discount_code ?? "";
+        save({ discount_code: workshop.discount_code });
+      });
+
+      document.getElementById("delete-workshop")!.addEventListener("click", async () => {
+        if (!window.confirm(`¿Eliminar "${workshop.title}" y TODAS sus inscripciones? No se puede deshacer.`)) return;
+        const { error } = await supabase.from("workshops").delete().eq("id", workshop.id);
+        if (!error) window.location.href = adminPath("/talleres");
+      });
+
+      // --- Inscritos ---
+      let registrations: Registration[] = [];
+      const list = document.getElementById("regs-list")!;
+      const empty = document.getElementById("regs-empty")!;
+      const summary = document.getElementById("followup-summary")!;
+      const sendButton = document.getElementById("send-followup") as HTMLButtonElement;
+
+      function pendingCount() {
+        const emails = new Set(
+          registrations.filter((r) => r.marketing_consent && !r.unsubscribed_at && !r.followup_sent_at).map((r) => r.email),
+        );
+        return emails.size;
+      }
+
+      function render() {
+        list.innerHTML = "";
+        empty.classList.toggle("hidden", registrations.length > 0);
+
+        const people = registrations.reduce((n, r) => n + r.workshop_attendees.length, 0);
+        const consent = registrations.filter((r) => r.marketing_consent && !r.unsubscribed_at).length;
+        const sent = registrations.filter((r) => r.followup_sent_at).length;
+        const pending = pendingCount();
+        summary.textContent =
+          `${registrations.length} inscripciones · ${people} personas · ${consent} aceptan correos · ` +
+          `${sent} ya enviados · ${pending} pendientes de enviar`;
+        sendButton.textContent = pending > 0 ? `Enviar a ${pending} persona${pending === 1 ? "" : "s"}` : "Nada pendiente de enviar";
+        sendButton.disabled = pending === 0 || !workshop.discount_code;
+        if (!workshop.discount_code) sendButton.title = "Pon un código de descuento antes de enviar";
+
+        for (const r of registrations) {
+          const card = document.createElement("div");
+          card.className = "rounded-2xl border border-navy-100 bg-white p-4";
+
+          const head = document.createElement("div");
+          head.className = "flex flex-wrap items-start justify-between gap-2";
+          const who = document.createElement("div");
+          const name = document.createElement("p");
+          name.className = "font-display font-bold text-navy-900";
+          name.textContent = r.contact_name;
+          const contact = document.createElement("p");
+          contact.className = "text-xs text-navy-500";
+          contact.textContent = `${r.email} · ${r.phone} · ${shortDate.format(new Date(r.created_at))}`;
+          who.append(name, contact);
+
+          const badge = document.createElement("span");
+          badge.className = "rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide";
+          if (r.unsubscribed_at) {
+            badge.textContent = "Se dio de baja";
+            badge.classList.add("bg-navy-100", "text-navy-500");
+          } else if (r.followup_sent_at) {
+            badge.textContent = "Correo enviado";
+            badge.classList.add("bg-sky-50", "text-sky-700");
+          } else if (r.marketing_consent) {
+            badge.textContent = "Acepta correos";
+            badge.classList.add("bg-amber-100", "text-amber-700");
+          } else {
+            badge.textContent = "Sin correos";
+            badge.classList.add("bg-navy-50", "text-navy-400");
+          }
+          head.append(who, badge);
+
+          const people = document.createElement("ul");
+          people.className = "mt-3 flex flex-wrap gap-2";
+          for (const a of [...r.workshop_attendees].sort((x, y) => x.position - y.position)) {
+            const li = document.createElement("li");
+            li.className = "rounded-full bg-navy-50 px-3 py-1 text-xs font-semibold text-navy-700";
+            li.textContent = `${a.name} · ${a.age} años`;
+            people.appendChild(li);
+          }
+
+          card.append(head, people);
+          list.appendChild(card);
+        }
+      }
+
+      async function loadRegistrations() {
+        const { data } = await supabase
+          .from("workshop_registrations")
+          .select("id, created_at, contact_name, email, phone, marketing_consent, unsubscribed_at, followup_sent_at, workshop_attendees(name, age, position)")
+          .eq("workshop_id", workshop.id)
+          .order("created_at");
+        registrations = (data ?? []) as Registration[];
+        render();
+      }
+
+      await loadRegistrations();
+      codeInput.addEventListener("change", render);
+
+      // --- Exportar CSV (abre bien en Excel: separador ; y BOM para los acentos) ---
+      document.getElementById("export-csv")!.addEventListener("click", () => {
+        const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const rows = [["Contacto", "Email", "Teléfono", "Acepta correos", "Asistente", "Edad", "Fecha inscripción"]];
+        for (const r of registrations) {
+          for (const a of [...r.workshop_attendees].sort((x, y) => x.position - y.position)) {
+            rows.push([
+              r.contact_name,
+              r.email,
+              r.phone,
+              r.marketing_consent && !r.unsubscribed_at ? "Sí" : "No",
+              a.name,
+              String(a.age),
+              new Date(r.created_at).toLocaleString("es-ES"),
+            ]);
+          }
+        }
+        const csv = "﻿" + rows.map((row) => row.map(esc).join(";")).join("\r\n");
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        link.download = `inscritos-${workshop.slug}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+
+      // --- Envío del correo ---
+      const followupStatus = document.getElementById("followup-status")!;
+      const testInput = document.getElementById("test-email") as HTMLInputElement;
+      testInput.value = admin.user.email ?? "";
+
+      function showStatus(text: string, isError = false) {
+        followupStatus.textContent = text;
+        followupStatus.className = `mt-3 text-sm ${isError ? "text-red-700" : "text-navy-700"}`;
+      }
+
+      async function invoke(body: Record<string, unknown>) {
+        const { data, error } = await supabase.functions.invoke("send-workshop-followup", { body });
+        if (error) {
+          let detail = error.message;
+          const ctx = (error as { context?: Response }).context;
+          if (ctx && typeof ctx.text === "function") detail = (await ctx.text().catch(() => "")) || detail;
+          throw new Error(detail);
+        }
+        return data as { sent: number; failed: number; remaining: number };
+      }
+
+      const testButton = document.getElementById("send-test") as HTMLButtonElement;
+      testButton.addEventListener("click", async () => {
+        if (!testInput.value) return testInput.focus();
+        if (!workshop.discount_code) return showStatus("Pon primero un código de descuento.", true);
+        testButton.disabled = true;
+        showStatus("Enviando prueba...");
+        try {
+          await invoke({ workshopId: workshop.id, testEmail: testInput.value.trim() });
+          showStatus(`Prueba enviada a ${testInput.value}. Revisa también la carpeta de spam la primera vez.`);
+        } catch (err) {
+          showStatus("No se ha podido enviar la prueba: " + (err as Error).message, true);
+        }
+        testButton.disabled = false;
+      });
+
+      sendButton.addEventListener("click", async () => {
+        const pending = pendingCount();
+        if (!window.confirm(`Se va a enviar el correo con el código ${workshop.discount_code} a ${pending} persona(s). ¿Seguro?`)) return;
+
+        sendButton.disabled = true;
+        let totalSent = 0;
+        let totalFailed = 0;
+        try {
+          for (let round = 0; round < 50; round++) {
+            showStatus(`Enviando... ${totalSent} de ${pending}`);
+            const result = await invoke({ workshopId: workshop.id });
+            totalSent += result.sent;
+            totalFailed += result.failed;
+            if (result.remaining === 0) break;
+          }
+          showStatus(
+            `Hecho: ${totalSent} correo(s) enviado(s)` +
+              (totalFailed ? `, ${totalFailed} con error (se reintentarán si vuelves a pulsar).` : "."),
+            totalFailed > 0,
+          );
+        } catch (err) {
+          showStatus(`Se han enviado ${totalSent} antes de un error: ${(err as Error).message}`, true);
+        }
+        await loadRegistrations();
+      });
+    }
+  }
+</script>

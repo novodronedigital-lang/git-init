@@ -1,0 +1,31 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Darse de baja" description="Darse de baja de los correos de DronEduca." noindex>
+  <section class="py-20 sm:py-28">
+    <div class="container-page max-w-xl text-center">
+      <h1 class="font-display text-3xl font-extrabold text-navy-900">Darse de baja</h1>
+      <p id="status" class="mt-4 text-navy-600">Procesando tu baja...</p>
+      <a href="/" class="mt-8 inline-block text-sm font-semibold text-sky-700 hover:underline">Volver a la web</a>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { supabase } from "../lib/supabase";
+
+  const status = document.getElementById("status")!;
+  const token = new URLSearchParams(window.location.search).get("t") ?? "";
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token);
+
+  if (!isUuid) {
+    status.textContent = "El enlace de baja no es válido. Escríbenos a hola@droneduca.com y te damos de baja a mano.";
+  } else {
+    const { data, error } = await supabase.rpc("unsubscribe_workshop_email", { p_token: token });
+    status.textContent =
+      error || !data
+        ? "No hemos podido procesar la baja. Escríbenos a hola@droneduca.com y te damos de baja a mano."
+        : "Listo: ya no recibirás más correos comerciales de DronEduca ni de Novodrone.";
+  }
+</script>

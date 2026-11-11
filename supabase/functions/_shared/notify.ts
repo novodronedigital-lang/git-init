@@ -53,3 +53,72 @@ export async function sendNotificationEmail({ subject, html, replyTo }: SendEmai
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
+
+export interface OutgoingEmail {
+  to: string;
+  subject: string;
+  html: string;
+  /** Versión en texto plano: los filtros antispam penalizan los correos que solo traen HTML. */
+  text: string;
+  replyTo?: string;
+  /** URL de baja de un clic (RFC 8058): Gmail y Yahoo la exigen para envíos comerciales. */
+  unsubscribeUrl?: string;
+}
+
+/**
+ * Abre UNA conexión SMTP y envía los correos uno a uno (cada destinatario recibe el suyo, nunca en copia
+ * oculta masiva), con una pausa corta entre cada uno para no disparar los límites anti-spam del hosting.
+ */
+export async function sendEmails(
+  emails: OutgoingEmail[],
+  { delayMs = 1500 }: { delayMs?: number } = {},
+): Promise<{ sent: number; failed: { to: string; error: string }[] } | { error: string }> {
+  const host = Deno.env.get("SMTP_HOST");
+  const port = Deno.env.get("SMTP_PORT");
+  const user = Deno.env.get("SMTP_USER");
+  const pass = Deno.env.get("SMTP_PASS");
+
+  if (!host || !port || !user || !pass) {
+    return { error: "El envío de correos no está configurado (faltan los secrets SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS)" };
+  }
+
+  const fromAddress = Deno.env.get("MARKETING_FROM") ?? `DronEduca <${user}>`;
+
+  const transport = nodemailer.createTransport({
+    host,
+    port: Number(port),
+    secure: Number(port) === 465,
+    auth: { user, pass },
+    pool: true,
+    maxConnections: 1,
+  });
+
+  let sent = 0;
+  const failed: { to: string; error: string }[] = [];
+
+  for (const [i, email] of emails.entries()) {
+    try {
+      await transport.sendMail({
+        from: fromAddress,
+        to: email.to,
+        replyTo: email.replyTo,
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+        headers: email.unsubscribeUrl
+          ? {
+              "List-Unsubscribe": `<${email.unsubscribeUrl}>, <mailto:hola@droneduca.com?subject=Baja>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
+          : undefined,
+      });
+      sent += 1;
+    } catch (err) {
+      failed.push({ to: email.to, error: err instanceof Error ? err.message : String(err) });
+    }
+    if (i < emails.length - 1) await new Promise((r) => setTimeout(r, delayMs));
+  }
+
+  transport.close();
+  return { sent, failed };
+}
